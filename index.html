@@ -99,12 +99,14 @@
             z-index: 100;
             background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
             pointer-events: none; 
+            transition: background 0.4s var(--ease-out), backdrop-filter 0.4s var(--ease-out);
         }
         .header-logo, .header-nav, .menu-btn { pointer-events: auto; }
 
         .header-logo {
             font-family: var(--font-serif); font-size: 22px; font-weight: 700;
             color: var(--text-main); text-decoration: none; letter-spacing: 4px;
+            transition: opacity 0.4s var(--ease-out);
         }
 
         .header-nav { display: flex; gap: 40px; align-items: center; }
@@ -119,11 +121,14 @@
         
         .menu-btn {
             display: none; flex-direction: column; gap: 6px;
-            background: none; border: none; z-index: 101; padding: 10px;
+            background: rgba(255,255,255,0); border: none; z-index: 101; 
+            width: 44px; height: 44px; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: all 0.4s var(--ease-out);
         }
         .menu-btn span {
             display: block; width: 24px; height: 1px; background-color: var(--text-main);
-            transition: 0.3s ease;
+            transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
         }
 
         /* === 视图容器 === */
@@ -283,7 +288,7 @@
             position: fixed; top: 40px; right: 5vw;
             display: flex; align-items: center; gap: 12px;
             background: none; border: none; z-index: 2010;
-            color: #ffffff; 
+            color: #1ba9c6; 
             mix-blend-mode: difference; 
             padding: 10px;
         }
@@ -389,9 +394,34 @@
             .header-nav.nav-open { opacity: 1; pointer-events: auto; }
             .header-nav a { font-size: 16px; opacity: 1; }
             
+            /* 汉堡变叉号动画 */
             .menu-btn.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
             .menu-btn.active span:nth-child(2) { opacity: 0; }
             .menu-btn.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+            /* =========================================================
+               移动端：进入弹窗时的顶栏接管逻辑 (高级感变形)
+            ========================================================= */
+            .minimal-close-btn { display: none !important; } /* 移动端完全弃用旧版按钮 */
+            
+            .site-header.over-modal {
+                z-index: 3100; /* 层级提至最高，超越所有弹窗 */
+                background: transparent;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+            .site-header.over-modal .header-logo {
+                opacity: 0; /* 平滑隐藏Logo，视觉聚焦在作品上 */
+                pointer-events: none;
+            }
+            /* 变身悬浮白底毛玻璃关闭按钮 */
+            .site-header.over-modal .menu-btn {
+                background-color: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                border: 1px solid rgba(0, 0, 0, 0.1);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            }
 
             .hero-layout { gap: 0; }
             .hero-meta { display: none; } 
@@ -403,10 +433,6 @@
             .about-grid { grid-template-columns: 1fr; gap: 40px; }
             .about-portrait { height: 50vh; }
             .achievements { grid-template-columns: 1fr; }
-
-            .minimal-close-btn { top: 20px; right: 20px; gap: 0; }
-            .minimal-close-btn .close-text { display: none; } 
-            .minimal-close-btn .close-icon { width: 36px; height: 36px; }
 
             .detail-content-wrapper { padding: 80px 5vw 100px; }
             .detail-header h2 { font-size: 26px; }
@@ -438,9 +464,10 @@
     <div class="cursor" id="cursor"></div>
 
     <!-- 顶部导航栏 -->
-    <header class="site-header">
+    <header class="site-header" id="site-header">
         <a href="#" class="header-logo" onclick="switchView('works')">XIANG</a>
         
+        <!-- 移动端的灵魂组件：既是菜单开关，又是全局关闭键 -->
         <button class="menu-btn" id="menu-btn">
             <span></span><span></span><span></span>
         </button>
@@ -568,7 +595,7 @@
 
     <!-- 高级排版 详情组图模态框 (Project Modal) -->
     <div class="detail-modal" id="detail-modal">
-        <!-- 高级悬浮关闭按钮 -->
+        <!-- 桌面端保留此按钮，移动端已被CSS隐藏并由导航栏的汉堡菜单接管 -->
         <button class="minimal-close-btn" id="modal-close">
             <span class="close-text">CLOSE</span>
             <span class="close-icon"></span>
@@ -593,6 +620,7 @@
 
     <!-- 详情内部照片的二次单图全屏放大 (Zoom Modal) -->
     <div class="zoom-modal" id="zoom-modal">
+        <!-- 同样，桌面端专用 -->
         <button class="minimal-close-btn" id="zoom-close">
             <span class="close-text">CLOSE</span>
             <span class="close-icon"></span>
@@ -735,8 +763,12 @@
 
                 }, 800); 
 
-                menuBtn.classList.remove('active');
-                navMenu.classList.remove('nav-open');
+                // Reset nav state on view switch
+                if(isNavOpen) {
+                    isNavOpen = false;
+                    menuBtn.classList.remove('active');
+                    navMenu.classList.remove('nav-open');
+                }
             };
 
             navLinks.forEach(link => {
@@ -747,18 +779,32 @@
             });
 
             /* ==========================================
-               5. 移动端汉堡菜单逻辑
+               5. 状态管理与移动端汉堡按钮复用逻辑
             ========================================== */
+            let isNavOpen = false;
+            let isDetailModalOpen = false;
+            let isZoomModalOpen = false;
+            
             const menuBtn = document.getElementById('menu-btn');
             const navMenu = document.getElementById('nav-links');
-
+            const siteHeader = document.getElementById('site-header');
+            
+            // 核心控制器：根据当前状态执行对应的关闭操作
             menuBtn.addEventListener('click', () => {
-                menuBtn.classList.toggle('active');
-                navMenu.classList.toggle('nav-open');
+                if (isZoomModalOpen) {
+                    closeZoomModal();
+                } else if (isDetailModalOpen) {
+                    closeDetailModal();
+                } else {
+                    // 常规：打开/关闭导航菜单
+                    isNavOpen = !isNavOpen;
+                    menuBtn.classList.toggle('active', isNavOpen);
+                    navMenu.classList.toggle('nav-open', isNavOpen);
+                }
             });
 
             /* ==========================================
-               6. 高级组图项目画廊逻辑
+               6. 高级组图项目画廊逻辑 (Detail Modal)
             ========================================== */
             const detailModal = document.getElementById('detail-modal');
             const detailTitle = document.getElementById('detail-title');
@@ -766,11 +812,12 @@
             const detailStory1 = document.getElementById('detail-story-1');
             const detailStory2 = document.getElementById('detail-story-2');
             const detailImagesBox = document.getElementById('detail-images');
-            const closeBtn = document.getElementById('modal-close');
+            
+            // 桌面端专用关闭按钮
+            const desktopCloseBtn = document.getElementById('modal-close');
 
             document.querySelectorAll('.gallery-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    
                     detailTitle.textContent = item.dataset.title || "Untitled Project";
                     detailMeta.textContent = item.dataset.meta || "Xiang Visuals";
                     
@@ -785,8 +832,6 @@
                         const imgEl = document.createElement('img');
                         imgEl.src = url.trim();
                         imgEl.alt = "Project Photograph";
-                        // 移除原生指针，纯靠自定义光标
-                        
                         imgEl.onload = () => {
                             setTimeout(() => {
                                 imgEl.classList.add('loaded');
@@ -794,6 +839,11 @@
                         };
                         detailImagesBox.appendChild(imgEl);
                     });
+
+                    // 更新状态与UI
+                    isDetailModalOpen = true;
+                    menuBtn.classList.add('active'); // 汉堡按钮变成叉号
+                    siteHeader.classList.add('over-modal'); // 顶栏层级跃迁，接管关闭操作
 
                     detailModal.style.display = 'block';
                     document.body.style.overflow = 'hidden'; 
@@ -805,13 +855,21 @@
             const closeDetailModal = () => {
                 detailModal.classList.remove('show');
                 document.body.style.overflow = ''; 
+                
+                // 恢复状态与UI
+                isDetailModalOpen = false;
+                if (!isNavOpen) {
+                    menuBtn.classList.remove('active'); // 变回汉堡
+                }
+                siteHeader.classList.remove('over-modal'); // 顶栏回归原生层级
+
                 setTimeout(() => {
                     detailModal.style.display = 'none';
                     detailImagesBox.innerHTML = ''; 
                 }, 500);
             };
 
-            closeBtn.addEventListener('click', closeDetailModal);
+            desktopCloseBtn.addEventListener('click', closeDetailModal);
             
             detailModal.addEventListener('click', (e) => {
                 if (e.target === detailModal || e.target.classList.contains('detail-content-wrapper')) {
@@ -824,12 +882,15 @@
             ========================================== */
             const zoomModal = document.getElementById('zoom-modal');
             const zoomImg = document.getElementById('zoom-img');
-            const zoomClose = document.getElementById('zoom-close');
+            const desktopZoomClose = document.getElementById('zoom-close');
 
-            // 事件委托捕获所有 detail-images 里面的图片点击事件
             detailImagesBox.addEventListener('click', (e) => {
                 if (e.target.tagName === 'IMG') {
                     zoomImg.src = e.target.src;
+                    
+                    isZoomModalOpen = true;
+                    // DetailModal已经是打开状态，所以按钮已经是叉号，层级也是最高的，这里只需要标记状态即可
+
                     zoomModal.style.display = 'flex';
                     setTimeout(() => zoomModal.classList.add('show'), 10);
                 }
@@ -837,13 +898,17 @@
 
             const closeZoomModal = () => {
                 zoomModal.classList.remove('show');
+                
+                isZoomModalOpen = false; 
+                // 返回上一级（DetailModal依然开着），所以不需要改汉堡按钮的外观和层级
+
                 setTimeout(() => {
                     zoomModal.style.display = 'none';
                     zoomImg.src = '';
                 }, 400);
             };
 
-            zoomClose.addEventListener('click', closeZoomModal);
+            desktopZoomClose.addEventListener('click', closeZoomModal);
             zoomModal.addEventListener('click', (e) => {
                 if (e.target === zoomModal) closeZoomModal();
             });
