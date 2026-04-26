@@ -198,15 +198,23 @@
             50% { opacity: 1; }
         }
 
-        /* === 瀑布流图库 === */
+        /* === 瀑布流图库 (含 Safari 兼容性修复) === */
         .gallery-container {
             max-width: 1400px; margin: 0 auto; padding: 100px 6vw 150px;
         }
 
-        .gallery { column-count: 3; column-gap: 30px; }
+        .gallery { 
+            -webkit-column-count: 3; -moz-column-count: 3; column-count: 3; 
+            -webkit-column-gap: 30px; -moz-column-gap: 30px; column-gap: 30px; 
+        }
         
         .gallery-item {
-            margin-bottom: 30px; break-inside: avoid; overflow: hidden;
+            margin-bottom: 30px; 
+            /* 解决 Safari 下内容被阶段到下一列的问题 */
+            -webkit-column-break-inside: avoid; page-break-inside: avoid; break-inside: avoid; 
+            /* 强制转化为 inline-block 并在多列布局中撑满，这是修复 Safari 错乱的核心 */
+            display: inline-block; width: 100%; 
+            overflow: hidden;
             /* 增大位移，并使用更长的过渡时间与极度平滑的缓动，显得从容优雅 */
             opacity: 0; transform: translateY(60px); 
             transition: opacity 1.5s var(--ease-gentle), transform 1.5s var(--ease-gentle);
@@ -405,7 +413,9 @@
             .hero-meta { display: none; } 
             .hero-image-wrapper { max-width: 85vw; height: 50vh; }
 
-            .gallery { column-count: 1; }
+            .gallery { 
+                -webkit-column-count: 1; -moz-column-count: 1; column-count: 1; 
+            }
             .gallery-container { padding-top: 50px; }
 
             .about-grid { grid-template-columns: 1fr; gap: 40px; }
