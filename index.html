@@ -323,9 +323,16 @@
         .zoom-modal img {
             max-width: 90vw; max-height: 90vh; object-fit: contain;
             box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-            transform: scale(0.95); transition: transform 0.8s var(--ease-gentle);
+            /* 增加初始 opacity 配合切换动画 */
+            transform: scale(0.95); opacity: 0;
+            transition: transform 0.8s var(--ease-gentle), opacity 0.6s ease;
         }
-        .zoom-modal.show img { transform: scale(1); }
+        .zoom-modal.show img { transform: scale(1); opacity: 1; }
+        /* 切换图片时的状态 */
+        .zoom-modal.show img.updating {
+            transform: scale(0.98); opacity: 0;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
 
         /* === 关于页面 (About Section) === */
         .about-section {
@@ -596,6 +603,7 @@
             <span class="close-text">CLOSE</span>
             <span class="close-icon"></span>
         </button>
+
         <img id="zoom-img" src="" alt="Zoomed View">
     </div>
 
@@ -849,14 +857,42 @@
             });
 
             /* ==========================================
-               7. 单图极致放大模态框逻辑 (Zoom Modal)
+               7. 单图极致放大模态框及隐式切换逻辑 (Zoom Modal)
             ========================================== */
             const zoomModal = document.getElementById('zoom-modal');
             const zoomImg = document.getElementById('zoom-img');
             const desktopZoomClose = document.getElementById('zoom-close');
+            
+            let currentZoomImages = [];
+            let currentZoomIndex = 0;
+            let updateZoomTimeout;
+            
+            // 移动端滑动相关变量
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            // 执行图切换的过渡动画和数据更新
+            const updateZoomImage = () => {
+                // 添加缩小淡出的类
+                zoomImg.classList.add('updating');
+                
+                clearTimeout(updateZoomTimeout);
+                updateZoomTimeout = setTimeout(() => {
+                    // 更换图片源
+                    zoomImg.src = currentZoomImages[currentZoomIndex];
+                    // 移除类以触发淡入放大
+                    zoomImg.classList.remove('updating');
+                }, 250);
+            };
 
             detailImagesBox.addEventListener('click', (e) => {
                 if (e.target.tagName === 'IMG') {
+                    // 抓取当前详情页渲染的所有图片数组用于切换
+                    const imgs = Array.from(detailImagesBox.querySelectorAll('img'));
+                    currentZoomImages = imgs.map(img => img.src);
+                    currentZoomIndex = currentZoomImages.indexOf(e.target.src);
+                    
+                    // 初始化模态框图片
                     zoomImg.src = e.target.src;
                     
                     isZoomModalOpen = true;
@@ -873,12 +909,60 @@
                 setTimeout(() => {
                     zoomModal.style.display = 'none';
                     zoomImg.src = '';
+                    zoomImg.classList.remove('updating'); // 防止下次打开卡在缩小状态
                 }, 600);
             };
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
+            
+            // 点击背景关闭
             zoomModal.addEventListener('click', (e) => {
                 if (e.target === zoomModal) closeZoomModal();
+            });
+
+            // --- 移动端触屏滑动逻辑 ---
+            const handleSwipe = () => {
+                const swipeThreshold = 50; // 触发滑动的最小像素距离
+                
+                if (touchEndX < touchStartX - swipeThreshold) {
+                    // 向左滑动 -> 下一张
+                    if (currentZoomIndex < currentZoomImages.length - 1) {
+                        currentZoomIndex++;
+                        updateZoomImage();
+                    }
+                }
+                
+                if (touchEndX > touchStartX + swipeThreshold) {
+                    // 向右滑动 -> 上一张
+                    if (currentZoomIndex > 0) {
+                        currentZoomIndex--;
+                        updateZoomImage();
+                    }
+                }
+            };
+
+            zoomModal.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            zoomModal.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            // --- 桌面端键盘切换与 Esc 关闭 ---
+            document.addEventListener('keydown', (e) => {
+                if (isZoomModalOpen) {
+                    if (e.key === 'ArrowLeft' && currentZoomIndex > 0) {
+                        currentZoomIndex--;
+                        updateZoomImage();
+                    } else if (e.key === 'ArrowRight' && currentZoomIndex < currentZoomImages.length - 1) {
+                        currentZoomIndex++;
+                        updateZoomImage();
+                    } else if (e.key === 'Escape') {
+                        closeZoomModal();
+                    }
+                }
             });
 
         });
