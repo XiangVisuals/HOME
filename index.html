@@ -22,8 +22,10 @@
             --font-serif: 'Cinzel', 'Noto Serif SC', serif;
             --font-sans: 'Montserrat', sans-serif;
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-            /* 更柔和优雅的缓动曲线，用于项目出场 */
+            /* 更柔和优雅的缓动曲线 */
             --ease-gentle: cubic-bezier(0.2, 0.8, 0.2, 1);
+            /* 戏剧性极简高级动画曲线 */
+            --ease-dramatic: cubic-bezier(0.7, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,8 +33,8 @@
         /* 隐藏滚动条但保留滚动功能 */
         ::-webkit-scrollbar { display: none; }
         html, body {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none; 
         }
 
         body {
@@ -69,6 +71,36 @@
         #page-transition.done { transform: translateY(-100%); } 
         .no-transition { transition: none !important; }
 
+        /* === 全新设计的 全局 Loading 动画 (电影感进度拉幕) === */
+        #page-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background-color: #0a0a0a; color: #ffffff; z-index: 99999;
+            display: flex; align-items: flex-end; padding: 6vw;
+            /* 戏剧性的拉幕退出动画 */
+            transition: transform 1.2s cubic-bezier(0.7, 0, 0.2, 1);
+        }
+        #page-loader.loaded { transform: translateY(-100%); }
+        
+        .loader-content { width: 100%; }
+        .loader-text-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
+        
+        .loader-brand { 
+            font-family: var(--font-sans); font-size: 11px; letter-spacing: 4px; 
+            text-transform: uppercase; font-weight: 300; opacity: 0.6; 
+        }
+        .loader-counter { 
+            font-family: var(--font-serif); font-size: 8vw; line-height: 0.8; font-weight: 400; 
+        }
+        
+        .loader-progress-wrap { 
+            width: 100%; height: 1px; background: rgba(255,255,255,0.15); 
+            position: relative; overflow: hidden; 
+        }
+        .loader-progress-bar { 
+            position: absolute; top: 0; left: 0; height: 100%; width: 0%; 
+            background: #ffffff; transition: width 0.2s ease-out; 
+        }
+
         /* === 桌面端自定义光标 === */
         @media (pointer: fine) {
             body, a, button, img { cursor: none !important; }
@@ -89,7 +121,7 @@
             border: 1px solid rgba(0, 0, 0, 0.2);
         }
 
-        /* 触屏设备禁用光标（适配手机及大屏平板，如 iPad Pro） */
+        /* 触屏设备禁用光标 */
         @media (pointer: coarse), (hover: none), (max-width: 768px) {
             .cursor { display: none !important; }
             body, a, button, img { cursor: auto !important; }
@@ -172,7 +204,7 @@
             max-width: 100%; max-height: 100%;
             object-fit: contain; 
             box-shadow: 0 30px 60px rgba(0,0,0,0.1);
-            animation: heroReveal 2.5s var(--ease-gentle); /* 让封面图进入也更柔和 */
+            animation: heroReveal 2.5s var(--ease-gentle);
         }
 
         @keyframes heroReveal {
@@ -198,37 +230,64 @@
             50% { opacity: 1; }
         }
 
-        /* === 瀑布流图库 (含 Safari 兼容性修复) === */
-        .gallery-container {
-            max-width: 1400px; margin: 0 auto; padding: 100px 6vw 150px;
-        }
-
-        .gallery { 
-            -webkit-column-count: 3; -moz-column-count: 3; column-count: 3; 
-            -webkit-column-gap: 30px; -moz-column-gap: 30px; column-gap: 30px; 
+        /* === 全新策展式交错列表排版 (Editorial Zig-Zag Layout) === */
+        .gallery-container { 
+            max-width: 1500px; margin: 0 auto; padding: 100px 6vw 150px; 
         }
         
-        .gallery-item {
-            margin-bottom: 30px; 
-            /* 解决 Safari 下内容被阶段到下一列的问题 */
-            -webkit-column-break-inside: avoid; page-break-inside: avoid; break-inside: avoid; 
-            /* 强制转化为 inline-block 并在多列布局中撑满，这是修复 Safari 错乱的核心 */
-            display: inline-block; width: 100%; 
-            overflow: hidden;
-            /* 增大位移，并使用更长的过渡时间与极度平滑的缓动，显得从容优雅 */
-            opacity: 0; transform: translateY(60px); 
-            transition: opacity 1.5s var(--ease-gentle), transform 1.5s var(--ease-gentle);
+        .gallery-list { 
+            display: flex; flex-direction: column; gap: 18vh; /* 极大的呼吸感间距 */
         }
         
-        .gallery-item.visible { opacity: 1; transform: translateY(0); }
-
-        .gallery-item img {
-            width: 100%; display: block; object-fit: cover;
-            filter: grayscale(15%); 
-            transition: transform 1.2s var(--ease-out), filter 1.2s ease;
+        /* 单行项目容器 */
+        .gallery-item.row-layout {
+            display: flex; align-items: center; justify-content: space-between; gap: 8vw;
         }
-
-        .gallery-item:hover img { transform: scale(1.02); filter: grayscale(0%); }
+        /* 偶数行反转，形成交错 */
+        .gallery-item.row-layout.reverse { flex-direction: row-reverse; }
+        
+        /* 图片区 */
+        .row-img-wrap {
+            width: 58%; position: relative; overflow: hidden;
+            opacity: 0; transform: translateY(60px);
+            transition: opacity 1.2s var(--ease-gentle), transform 1.2s var(--ease-gentle);
+        }
+        .gallery-item.row-layout.visible .row-img-wrap { opacity: 1; transform: translateY(0); }
+        
+        .row-img-wrap img {
+            width: 100%; display: block; object-fit: cover; aspect-ratio: 4/3; /* 统一视觉比例 */
+            filter: grayscale(15%); transform: scale(1.05);
+            transition: transform 1.5s var(--ease-gentle), filter 0.8s ease;
+        }
+        .gallery-item.row-layout:hover .row-img-wrap img { transform: scale(1); filter: grayscale(0%); }
+        
+        /* 文本信息区 */
+        .row-info {
+            width: 35%; display: flex; flex-direction: column;
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 1s 0.2s var(--ease-gentle), transform 1s 0.2s var(--ease-gentle);
+        }
+        .gallery-item.row-layout.visible .row-info { opacity: 1; transform: translateY(0); }
+        
+        .row-num {
+            font-family: var(--font-serif); font-size: 12px; color: var(--text-sub);
+            margin-bottom: 30px; display: flex; align-items: center; gap: 20px;
+        }
+        .row-num::after { content: ''; width: 40px; height: 1px; background: var(--border-color); }
+        
+        .row-title {
+            font-family: var(--font-serif); font-size: 2vw; line-height: 1.4;
+            font-weight: 400; color: var(--text-main); margin-bottom: 20px; 
+        }
+        .row-title span { 
+            font-family: var(--font-sans); display: block; font-size: 11px; 
+            letter-spacing: 2px; color: var(--text-sub); margin-top: 10px; text-transform: uppercase;
+        }
+        
+        .row-meta { 
+            font-family: var(--font-sans); font-size: 10px; letter-spacing: 3px; 
+            color: var(--text-main); text-transform: uppercase; 
+        }
 
         /* === 沉浸式组图排版模态框 (Project Modal) === */
         .detail-modal {
@@ -269,7 +328,6 @@
             color: #666666; text-align: justify;
         }
 
-        /* 组图排版 */
         .detail-images {
             display: grid; grid-template-columns: repeat(12, 1fr); 
             gap: 4vw 2vw; width: 100%; align-items: start;
@@ -278,7 +336,6 @@
         .detail-images img {
             width: 100%; height: auto; object-fit: cover; display: block;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            /* 组图加载更柔和 */
             opacity: 0; transform: translateY(40px); 
             transition: opacity 1.5s var(--ease-gentle), transform 1.5s var(--ease-gentle);
         }
@@ -331,12 +388,10 @@
         .zoom-modal img {
             max-width: 90vw; max-height: 90vh; object-fit: contain;
             box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-            /* 增加初始 opacity 配合切换动画 */
             transform: scale(0.95); opacity: 0;
             transition: transform 0.8s var(--ease-gentle), opacity 0.6s ease;
         }
         .zoom-modal.show img { transform: scale(1); opacity: 1; }
-        /* 切换图片时的状态 */
         .zoom-modal.show img.updating {
             transform: scale(0.98); opacity: 0;
             transition: transform 0.25s ease, opacity 0.25s ease;
@@ -413,9 +468,19 @@
             .hero-meta { display: none; } 
             .hero-image-wrapper { max-width: 85vw; height: 50vh; }
 
-            .gallery { 
-                -webkit-column-count: 1; -moz-column-count: 1; column-count: 1; 
+            /* 移动端 Loader 调整 */
+            .loader-counter { font-size: 15vw; }
+            .loader-brand { font-size: 10px; }
+
+            /* 移动端列表重置为单列垂直排列 */
+            .gallery-item.row-layout, .gallery-item.row-layout.reverse { 
+                flex-direction: column; gap: 30px; align-items: flex-start; 
             }
+            .row-img-wrap { width: 100%; }
+            .row-info { width: 100%; padding: 0; }
+            .row-title { font-size: 24px; margin-bottom: 15px; }
+            .row-num { margin-bottom: 20px; }
+            .gallery-list { gap: 10vh; }
             .gallery-container { padding-top: 50px; }
 
             .about-grid { grid-template-columns: 1fr; gap: 40px; }
@@ -437,8 +502,17 @@
 </head>
 <body>
 
+    <!-- 修改 Loader 的 HTML 结构以支持全新进度条设计 -->
     <div id="page-loader">
-        <span class="loader-text">XIANG VISUALS</span>
+        <div class="loader-content">
+            <div class="loader-text-wrap">
+                <span class="loader-brand">XIANG VISUALS</span>
+                <span class="loader-counter" id="loader-counter">0%</span>
+            </div>
+            <div class="loader-progress-wrap">
+                <div class="loader-progress-bar" id="loader-bar"></div>
+            </div>
+        </div>
     </div>
 
     <div id="page-transition"></div>
@@ -486,54 +560,110 @@
                 </div>
             </section>
 
+            <!-- 全新设计的交错列表容器 -->
             <section class="gallery-container">
-                <div class="gallery" id="gallery-grid">
-                    <div class="gallery-item" 
+                <div class="gallery-list" id="gallery-grid">
+                    
+                    <!-- 项目 1：图左文右 -->
+                    <div class="gallery-item row-layout" 
                          data-title="灰度架构 / Grayscale Architecture" 
                          data-meta="2023 / DALIAN"
                          data-story="黑与白的极致对撞，抽离色彩的喧嚣，让光影成为建筑的骨血，线条成为空间的诗行。每一格画面，都是对城市肌理最克制的艺术解构。|在灰度的层次里，建筑的轮廓与城市的呼吸悄然共振。摒弃浮华的修饰，黑白镜头定格的，是空间最本真的力量，与城市静默的灵魂。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0657.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0280.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg" alt="项目缩略图">
+                        
+                        <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg" alt="Grayscale Architecture">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">01</span>
+                            <h3 class="row-title">灰度架构<span>Grayscale Architecture</span></h3>
+                            <span class="row-meta">2023 / DALIAN</span>
+                        </div>
                     </div>
                     
-                    <div class="gallery-item"
+                    <!-- 项目 2：反转布局 (reverse) - 图右文左 -->
+                    <div class="gallery-item row-layout reverse"
                          data-title="色彩的温度 / The Temperature of Color" 
                          data-meta="2021 / BEIJING"
                          data-story="色彩不仅是视觉的表象，更是情绪的显影，从落日的余晖到几何的浓烈碰撞，色调定义了瞬间的温度。|镜头捕捉光色交织的叙事，在冷暖对比的纯粹视觉中，定格最直观的感官记忆。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_3550.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1387.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0265.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/20241123-_L5A7867_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0355.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0325.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg" alt="项目缩略图">
+                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_3550.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1387.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/20241123-_L5A7867_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0355.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0325.jpg">
+                        
+                        <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg" alt="The Temperature of Color">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">02</span>
+                            <h3 class="row-title">色彩的温度<span>The Temperature of Color</span></h3>
+                            <span class="row-meta">2021 / BEIJING</span>
+                        </div>
                     </div>
 
-                    <div class="gallery-item"
+                    <!-- 项目 3 -->
+                    <div class="gallery-item row-layout"
                          data-title="几何与留白 / Geometry and Negative Space" 
                          data-meta="2022 / BEIJNG"
                          data-story="剥离多余的喧嚣，取景框内只留下纯粹的几何与线条。|摄影是一场做减法的艺术，在极致的留白与锋利的切割间，重构空间的绝对理性与平静。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/2ABA18B3-761A-4B6C-BF2A-B79CEB33B064_1_102_o.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_3545.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0072.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_1367.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0063.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg" alt="项目缩略图">
+                        
+                         <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg" alt="Geometry and Negative Space">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">03</span>
+                            <h3 class="row-title">几何与留白<span>Geometry and Negative Space</span></h3>
+                            <span class="row-meta">2022 / BEIJING</span>
+                        </div>
                     </div>
 
-                    <div class="gallery-item"
+                    <!-- 项目 4 (reverse) -->
+                    <div class="gallery-item row-layout reverse"
                          data-title="仰望的刻度 / The Scale of Time" 
                          data-meta="2023 / DALIAN"
                          data-story="云的形态是时间的具象化，远处的白云如同静止的雪山，暗沉的积云则像海浪般汹涌，站在大连的海岸线上看着它们聚拢又消散，摄影的意义或许就是把这种转瞬即逝的宏大折叠进一张二维的图像里成为永恒。|站在大连的海岸线上，透过取景框看着它们在无尽的蓝中聚拢又消散，仿佛能体会到气流与天空交锋的瞬息万变，摄影的意义或许不仅仅是按下快门的本能，更是试图把这种转瞬即逝的宏大与敬畏小心翼翼地折叠进一张二维的图像里，让那些原本会被时间带走的瞬间，最终凝固成纯粹且永恒的视觉张力。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0431.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0679.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg" alt="项目缩略图">
+                        
+                         <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg" alt="The Scale of Time">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">04</span>
+                            <h3 class="row-title">仰望的刻度<span>The Scale of Time</span></h3>
+                            <span class="row-meta">2023 / DALIAN</span>
+                        </div>
                     </div>
 
-                    <div class="gallery-item"
+                    <!-- 项目 5 -->
+                    <div class="gallery-item row-layout"
                          data-title="空濛之境 / The Hazy Realm" 
                          data-meta="2023 / DALIAN"
                          data-story="雾霭漫过水面与天际，把世界揉成一片柔软的灰蓝。桥与岛在朦胧里若隐若现，所有喧嚣都沉在雾里，只剩呼吸与光影的温柔共振。|天地被雾色晕染成淡墨长卷，轮廓消隐，边界模糊。在这半明半暗的留白里，我们与世界温柔对视，听见寂静里的回响。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/3170035~2_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_1459.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/6.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_2067.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG" alt="项目缩略图">
+                        
+                         <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG" alt="The Hazy Realm">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">05</span>
+                            <h3 class="row-title">空濛之境<span>The Hazy Realm</span></h3>
+                            <span class="row-meta">2023 / DALIAN</span>
+                        </div>
                     </div>
 
-                    <div class="gallery-item"
+                    <!-- 项目 6 (reverse) -->
+                    <div class="gallery-item row-layout reverse"
                          data-title="天际轮廓 / Skyline Contours" 
                          data-meta="2023 / DALIAN"
                          data-story="当视线越过山脊，城市的建筑肌理在晨昏的薄雾中安静地舒展。|沿着山海的交界线俯瞰，用镜头丈量天际的起伏，定格这座城市最宏大的静谧。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0491.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0249.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_4272.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_9589.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0568.jpg">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg" alt="项目缩略图">
+                        
+                         <div class="row-img-wrap">
+                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg" alt="Skyline Contours">
+                        </div>
+                        <div class="row-info">
+                            <span class="row-num">06</span>
+                            <h3 class="row-title">天际轮廓<span>Skyline Contours</span></h3>
+                            <span class="row-meta">2023 / DALIAN</span>
+                        </div>
                     </div>
 
                 </div>
@@ -638,14 +768,35 @@
 
 
             /* ==========================================
-               1. 全局 Loading 动画
+               1. 全局 Loading 动画 (全新进度条交互)
             ========================================== */
-            const loader = document.getElementById('page-loader');
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    loader.classList.add('hidden');
-                }, 500); 
-            });
+            let currentProgress = 0;
+            const counterEl = document.getElementById('loader-counter');
+            const barEl = document.getElementById('loader-bar');
+            const loaderEl = document.getElementById('page-loader');
+
+            const simulateLoading = () => {
+                // 模拟非线性的真实加载感
+                currentProgress += Math.floor(Math.random() * 12) + 2;
+                if (currentProgress > 100) currentProgress = 100;
+                
+                counterEl.textContent = currentProgress + '%';
+                barEl.style.width = currentProgress + '%';
+
+                if (currentProgress < 100) {
+                    setTimeout(simulateLoading, Math.random() * 50 + 20);
+                } else {
+                    // 加载完毕后，触发拉幕退出
+                    setTimeout(() => {
+                        loaderEl.classList.add('loaded');
+                        // 移除 DOM 阻止后续事件阻挡
+                        setTimeout(() => loaderEl.style.display = 'none', 1200);
+                    }, 400); 
+                }
+            };
+            
+            // 确保 DOM 解析完成后立即启动动画读条
+            simulateLoading();
 
             /* ==========================================
                2. 极致顺滑自定义光标 & 全局事件委托悬停
@@ -655,7 +806,6 @@
             let cursorX = 0, cursorY = 0;
             let cursorVisible = false;
 
-            // 采用更可靠的特征检测来判断是否为触屏设备（包括大屏平板，如iPad Pro）
             const isTouchDevice = ('ontouchstart' in window) || 
                                   (navigator.maxTouchPoints > 0) || 
                                   window.matchMedia("(pointer: coarse)").matches;
@@ -692,8 +842,9 @@
 
             /* ==========================================
                3. 页面滚动揭示动画 (Intersection Observer)
+               调整了 rootMargin 使动画在视口内触发得更加精准
             ========================================== */
-            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -50px 0px" };
+            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -100px 0px" };
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -876,34 +1027,26 @@
             let currentZoomIndex = 0;
             let updateZoomTimeout;
             
-            // 移动端滑动相关变量
             let touchStartX = 0;
             let touchEndX = 0;
 
-            // 执行图切换的过渡动画和数据更新
             const updateZoomImage = () => {
-                // 添加缩小淡出的类
                 zoomImg.classList.add('updating');
                 
                 clearTimeout(updateZoomTimeout);
                 updateZoomTimeout = setTimeout(() => {
-                    // 更换图片源
                     zoomImg.src = currentZoomImages[currentZoomIndex];
-                    // 移除类以触发淡入放大
                     zoomImg.classList.remove('updating');
                 }, 250);
             };
 
             detailImagesBox.addEventListener('click', (e) => {
                 if (e.target.tagName === 'IMG') {
-                    // 抓取当前详情页渲染的所有图片数组用于切换
                     const imgs = Array.from(detailImagesBox.querySelectorAll('img'));
                     currentZoomImages = imgs.map(img => img.src);
                     currentZoomIndex = currentZoomImages.indexOf(e.target.src);
                     
-                    // 初始化模态框图片
                     zoomImg.src = e.target.src;
-                    
                     isZoomModalOpen = true;
 
                     zoomModal.style.display = 'flex';
@@ -918,31 +1061,26 @@
                 setTimeout(() => {
                     zoomModal.style.display = 'none';
                     zoomImg.src = '';
-                    zoomImg.classList.remove('updating'); // 防止下次打开卡在缩小状态
+                    zoomImg.classList.remove('updating');
                 }, 600);
             };
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
             
-            // 点击背景关闭
             zoomModal.addEventListener('click', (e) => {
                 if (e.target === zoomModal) closeZoomModal();
             });
 
-            // --- 移动端触屏滑动逻辑 ---
             const handleSwipe = () => {
-                const swipeThreshold = 50; // 触发滑动的最小像素距离
+                const swipeThreshold = 50; 
                 
                 if (touchEndX < touchStartX - swipeThreshold) {
-                    // 向左滑动 -> 下一张
                     if (currentZoomIndex < currentZoomImages.length - 1) {
                         currentZoomIndex++;
                         updateZoomImage();
                     }
                 }
-                
                 if (touchEndX > touchStartX + swipeThreshold) {
-                    // 向右滑动 -> 上一张
                     if (currentZoomIndex > 0) {
                         currentZoomIndex--;
                         updateZoomImage();
@@ -959,7 +1097,6 @@
                 handleSwipe();
             }, { passive: true });
 
-            // --- 桌面端键盘切换与 Esc 关闭 ---
             document.addEventListener('keydown', (e) => {
                 if (isZoomModalOpen) {
                     if (e.key === 'ArrowLeft' && currentZoomIndex > 0) {
@@ -981,9 +1118,7 @@
          Microsoft Clarity 性能优化加载方案 
     ========================================== -->
     <script type="text/javascript">
-        // 核心优化思路：完全不阻塞主渲染线程和首屏图片加载
         window.addEventListener('load', function() {
-            // 定义 Clarity 的初始化函数
             var initClarity = function() {
                 (function(c,l,a,r,i,t,y){
                     c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
@@ -992,11 +1127,9 @@
                 })(window, document, "clarity", "script", "qt6tim5n2h");
             };
 
-            // 使用 requestIdleCallback 确保在浏览器空闲时再执行脚本加载
             if ('requestIdleCallback' in window) {
                 requestIdleCallback(initClarity);
             } else {
-                // 如果浏览器不支持，则在页面加载完毕后再延迟1秒执行，确保绝对不抢网速
                 setTimeout(initClarity, 1000);
             }
         });
