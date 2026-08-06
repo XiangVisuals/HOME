@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XIANGVISUALS</title>
-    <!-- 添加网站图标 (Favicon) -->
+    <!-- 1. 添加网站图标 (Favicon) -->
     <link rel="icon" href="https://cllli.oss-cn-beijing.aliyuncs.com/logo/logo.svg" type="image/svg+xml">
-    <!-- 引入高级感字体 -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap">
+    <!-- 2. 引入高级感字体 -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@200;400;600;700&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap">
     
     <!-- ==========================================
                     CSS 样式部分 
     ========================================== -->
     <style>
-        /* === 基础变量与重置 === */
         :root {
             --bg-color: #ffffff;
             --text-main: #0a0a0a;
@@ -22,15 +21,12 @@
             --font-serif: 'Cinzel', 'Noto Serif SC', serif;
             --font-sans: 'Montserrat', sans-serif;
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-            /* 更柔和优雅的缓动曲线 */
             --ease-gentle: cubic-bezier(0.2, 0.8, 0.2, 1);
-            /* 戏剧性极简高级动画曲线 */
             --ease-dramatic: cubic-bezier(0.7, 0, 0.2, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        /* 隐藏滚动条但保留滚动功能 */
         ::-webkit-scrollbar { display: none; }
         html, body {
             -ms-overflow-style: none;
@@ -45,19 +41,40 @@
             overflow-x: hidden;
         }
 
-        /* === 全局 Loading 动画 === */
+        /* === 简约白色灵动 Loading 动画 === */
         #page-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color); z-index: 99999;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background-color: #ffffff; z-index: 99999;
             display: flex; justify-content: center; align-items: center;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
+            transition: opacity 1.2s var(--ease-dramatic), visibility 1.2s;
         }
-        #page-loader.hidden {
-            opacity: 0; visibility: hidden;
+        #page-loader.loaded { 
+            opacity: 0; visibility: hidden; pointer-events: none; 
         }
-        .loader-text {
-            font-family: var(--font-serif); font-size: 14px; letter-spacing: 6px;
-            color: var(--text-main); animation: pulse 1.5s infinite;
+        
+        .loader-content { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+            transition: transform 0.8s var(--ease-dramatic), opacity 0.8s ease;
+        }
+        #page-loader.loaded .loader-content {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        
+        .loader-shape {
+            width: 24px; height: 24px; border: 1px solid var(--text-main);
+            /* 灵动的几何变形旋转动画 */
+            animation: morphShape 2s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+        }
+        @keyframes morphShape {
+            0% { transform: rotate(0deg); border-radius: 0%; background-color: transparent; }
+            50% { transform: rotate(180deg) scale(0.5); border-radius: 50%; background-color: var(--text-main); }
+            100% { transform: rotate(360deg); border-radius: 0%; background-color: transparent; }
+        }
+        
+        .loader-counter { 
+            font-family: var(--font-sans); font-size: 11px; font-weight: 400; 
+            letter-spacing: 4px; color: var(--text-main); margin-right: -4px;
         }
 
         /* === 页面过渡动画遮罩 === */
@@ -71,36 +88,6 @@
         #page-transition.done { transform: translateY(-100%); } 
         .no-transition { transition: none !important; }
 
-        /* === 全新设计的 全局 Loading 动画 (电影感进度拉幕) === */
-        #page-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background-color: #0a0a0a; color: #ffffff; z-index: 99999;
-            display: flex; align-items: flex-end; padding: 6vw;
-            /* 戏剧性的拉幕退出动画 */
-            transition: transform 1.2s cubic-bezier(0.7, 0, 0.2, 1);
-        }
-        #page-loader.loaded { transform: translateY(-100%); }
-        
-        .loader-content { width: 100%; }
-        .loader-text-wrap { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; }
-        
-        .loader-brand { 
-            font-family: var(--font-sans); font-size: 11px; letter-spacing: 4px; 
-            text-transform: uppercase; font-weight: 300; opacity: 0.6; 
-        }
-        .loader-counter { 
-            font-family: var(--font-serif); font-size: 8vw; line-height: 0.8; font-weight: 400; 
-        }
-        
-        .loader-progress-wrap { 
-            width: 100%; height: 1px; background: rgba(255,255,255,0.15); 
-            position: relative; overflow: hidden; 
-        }
-        .loader-progress-bar { 
-            position: absolute; top: 0; left: 0; height: 100%; width: 0%; 
-            background: #ffffff; transition: width 0.2s ease-out; 
-        }
-
         /* === 桌面端自定义光标 === */
         @media (pointer: fine) {
             body, a, button, img { cursor: none !important; }
@@ -111,14 +98,23 @@
             background-color: var(--text-main); border-radius: 50%;
             pointer-events: none; z-index: 9999;
             transform: translate(-50%, -50%);
-            transition: width 0.3s var(--ease-out), height 0.3s var(--ease-out), background-color 0.3s;
+            transition: width 0.3s var(--ease-out), height 0.3s var(--ease-out), background-color 0.3s, border 0.3s;
             display: none; 
         }
 
+        /* 普通交互元素悬浮状态 */
         .cursor.hovering {
             width: 45px; height: 45px;
             background-color: rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 针对主图的反色悬浮状态 */
+        .cursor.hovering-inverse {
+            width: 65px; height: 65px;
+            background-color: #ffffff;
+            border: none;
+            mix-blend-mode: difference;
         }
 
         /* 触屏设备禁用光标 */
@@ -167,7 +163,6 @@
             transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
         }
 
-        /* === 视图容器 === */
         .view-section {
             display: none; opacity: 0; transition: opacity 0.6s var(--ease-out);
         }
@@ -197,22 +192,25 @@
         .hero-image-wrapper {
             display: flex; justify-content: center; align-items: center;
             max-width: 45vw; height: 65vh; 
+            position: relative;
+            cursor: none;
         }
 
-        .hero-image-wrapper img {
+        /* 主基础图，去除固定黑白滤镜，改为由原图色彩展现 */
+        .hero-main {
             width: auto; height: auto; 
             max-width: 100%; max-height: 100%;
             object-fit: contain; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
             animation: heroReveal 2.5s var(--ease-gentle);
         }
 
         @keyframes heroReveal {
-            0% { transform: scale(1.05); opacity: 0; filter: blur(15px); }
-            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+            0% { transform: scale(1.05) translateY(30px); opacity: 0; filter: grayscale(100%) blur(15px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: grayscale(0%) blur(0); }
         }
 
-        /* === 极简滚动图标 === */
+        /* 极简滚动图标 */
         .scroll-icon {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             width: 24px; height: 24px; color: var(--text-sub);
@@ -225,28 +223,22 @@
             0%, 100% { transform: translate(-50%, 0); opacity: 0.3; }
             50% { transform: translate(-50%, 8px); opacity: 0.8; }
         }
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 1; }
-        }
 
-        /* === 全新策展式交错列表排版 (Editorial Zig-Zag Layout) === */
+        /* === 策展式交错列表排版 === */
         .gallery-container { 
             max-width: 1500px; margin: 0 auto; padding: 100px 6vw 150px; 
         }
         
         .gallery-list { 
-            display: flex; flex-direction: column; gap: 18vh; /* 极大的呼吸感间距 */
+            display: flex; flex-direction: column; gap: 18vh; 
         }
         
-        /* 单行项目容器 */
         .gallery-item.row-layout {
             display: flex; align-items: center; justify-content: space-between; gap: 8vw;
+            cursor: none;
         }
-        /* 偶数行反转，形成交错 */
         .gallery-item.row-layout.reverse { flex-direction: row-reverse; }
         
-        /* 图片区 */
         .row-img-wrap {
             width: 58%; position: relative; overflow: hidden;
             opacity: 0; transform: translateY(60px);
@@ -255,13 +247,12 @@
         .gallery-item.row-layout.visible .row-img-wrap { opacity: 1; transform: translateY(0); }
         
         .row-img-wrap img {
-            width: 100%; display: block; object-fit: cover; aspect-ratio: 4/3; /* 统一视觉比例 */
+            width: 100%; display: block; object-fit: cover; aspect-ratio: 4/3; 
             filter: grayscale(15%); transform: scale(1.05);
             transition: transform 1.5s var(--ease-gentle), filter 0.8s ease;
         }
         .gallery-item.row-layout:hover .row-img-wrap img { transform: scale(1); filter: grayscale(0%); }
         
-        /* 文本信息区 */
         .row-info {
             width: 35%; display: flex; flex-direction: column;
             opacity: 0; transform: translateY(30px);
@@ -305,47 +296,31 @@
             max-width: 1000px; margin: 0 auto; align-items: center;
         }
 
-        .detail-header {
-            text-align: center; margin-bottom: 60px; max-width: 800px; width: 100%;
-        }
-
-        .detail-header h2 {
-            font-family: var(--font-serif); font-size: 38px; line-height: 1.4;
-            margin-bottom: 20px; color: var(--text-main); letter-spacing: 2px;
-        }
-
-        .detail-meta {
-            font-size: 11px; letter-spacing: 4px; color: var(--text-sub); text-transform: uppercase;
-        }
+        .detail-header { text-align: center; margin-bottom: 60px; max-width: 800px; width: 100%; }
+        .detail-header h2 { font-family: var(--font-serif); font-size: 38px; line-height: 1.4; margin-bottom: 20px; color: var(--text-main); letter-spacing: 2px; }
+        .detail-meta { font-size: 11px; letter-spacing: 4px; color: var(--text-sub); text-transform: uppercase; }
 
         .detail-text-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 4vw;
             margin-bottom: 120px; max-width: 900px; width: 100%;
         }
-
-        .detail-story-col {
-            font-size: 13px; font-weight: 300; line-height: 2.4; 
-            color: #666666; text-align: justify;
-        }
+        .detail-story-col { font-size: 13px; font-weight: 300; line-height: 2.4; color: #666666; text-align: justify; }
 
         .detail-images {
             display: grid; grid-template-columns: repeat(12, 1fr); 
             gap: 4vw 2vw; width: 100%; align-items: start;
         }
-
         .detail-images img {
             width: 100%; height: auto; object-fit: cover; display: block;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
             opacity: 0; transform: translateY(40px); 
             transition: opacity 1.5s var(--ease-gentle), transform 1.5s var(--ease-gentle);
         }
-
         .detail-images img:nth-child(1) { grid-column: 1 / 13; margin-bottom: 2vw; }
         .detail-images img:nth-child(n+2) { grid-column: span 6; }
-        
         .detail-images img.loaded { opacity: 1; transform: translateY(0); }
 
-        /* === 极简高级 悬浮关闭按钮 === */
+        /* === 悬浮关闭按钮 === */
         .minimal-close-btn {
             position: fixed; top: 40px; right: 5vw;
             display: flex; align-items: center; gap: 12px;
@@ -353,26 +328,16 @@
             color: #1ba9c6; mix-blend-mode: difference; padding: 10px;
         }
         .minimal-close-btn .close-text {
-            font-family: var(--font-sans);
-            font-size: 10px; font-weight: 500; letter-spacing: 2px;
-            text-transform: uppercase;
-            transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
+            font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
         }
         .minimal-close-btn .close-icon {
-            position: relative; width: 44px; height: 44px;
-            border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4);
-            display: flex; justify-content: center; align-items: center;
-            transition: all 0.4s var(--ease-out);
+            position: relative; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); display: flex; justify-content: center; align-items: center; transition: all 0.4s var(--ease-out);
         }
-        .minimal-close-btn .close-icon::before, 
-        .minimal-close-btn .close-icon::after {
-            content: ''; position: absolute;
-            width: 14px; height: 1px; background-color: #ffffff;
-            transition: transform 0.4s var(--ease-out);
+        .minimal-close-btn .close-icon::before, .minimal-close-btn .close-icon::after {
+            content: ''; position: absolute; width: 14px; height: 1px; background-color: #ffffff; transition: transform 0.4s var(--ease-out);
         }
         .minimal-close-btn .close-icon::before { transform: rotate(45deg); }
         .minimal-close-btn .close-icon::after { transform: rotate(-45deg); }
-
         .minimal-close-btn:hover .close-icon { transform: rotate(90deg) scale(1.05); border-color: #ffffff; }
         .minimal-close-btn:hover .close-text { transform: translateX(-5px); opacity: 0.6; }
 
@@ -380,53 +345,32 @@
         .zoom-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.98); z-index: 3000;
-            justify-content: center; align-items: center;
-            opacity: 0; transition: opacity 0.6s ease;
+            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.6s ease;
         }
         .zoom-modal.show { display: flex; opacity: 1; }
-        
         .zoom-modal img {
-            max-width: 90vw; max-height: 90vh; object-fit: contain;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-            transform: scale(0.95); opacity: 0;
-            transition: transform 0.8s var(--ease-gentle), opacity 0.6s ease;
+            max-width: 90vw; max-height: 90vh; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+            transform: scale(0.95); opacity: 0; transition: transform 0.8s var(--ease-gentle), opacity 0.6s ease;
         }
         .zoom-modal.show img { transform: scale(1); opacity: 1; }
         .zoom-modal.show img.updating {
-            transform: scale(0.98); opacity: 0;
-            transition: transform 0.25s ease, opacity 0.25s ease;
+            transform: scale(0.98); opacity: 0; transition: transform 0.25s ease, opacity 0.25s ease;
         }
 
-        /* === 关于页面 (About Section) === */
-        .about-section {
-            min-height: 100vh; padding: 150px 8vw 100px; display: flex; align-items: center;
-        }
-
-        .about-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10vw;
-            max-width: 1200px; margin: 0 auto; align-items: center;
-        }
-
-        .about-portrait {
-            width: 100%; height: 70vh; object-fit: cover; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-        }
-
+        /* === 关于页面 === */
+        .about-section { min-height: 100vh; padding: 150px 8vw 100px; display: flex; align-items: center; }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10vw; max-width: 1200px; margin: 0 auto; align-items: center; }
+        .about-portrait { width: 100%; height: 70vh; object-fit: cover; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
         .about-content .label { font-size: 10px; letter-spacing: 4px; color: var(--text-sub); display: block; margin-bottom: 20px; }
         .about-content h1 { font-family: var(--font-serif); font-size: 60px; font-weight: 700; line-height: 1; margin-bottom: 20px; color: var(--text-main); }
         .about-content h2 { font-size: 14px; font-weight: 300; letter-spacing: 2px; color: #555; margin-bottom: 40px; }
         .about-content p { font-size: 14px; font-weight: 300; line-height: 2.2; color: #444; margin-bottom: 60px; }
-
-        .achievements {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
-            border-top: 1px solid var(--border-color); padding-top: 40px;
-        }
-
+        .achievements { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; border-top: 1px solid var(--border-color); padding-top: 40px; }
         .achieve-item { display: flex; flex-direction: column; gap: 6px; }
         .achieve-num { font-family: var(--font-serif); font-size: 12px; color: var(--text-sub); }
         .achieve-text { font-size: 13px; font-weight: 500; }
 
-        /* === 网站底栏 (Footer) === */
+        /* === 网站底栏 === */
         .site-footer {
             width: 100%; padding: 40px 6vw; display: flex; justify-content: space-between; align-items: center;
             border-top: 1px solid var(--border-color); background-color: var(--bg-color);
@@ -468,11 +412,9 @@
             .hero-meta { display: none; } 
             .hero-image-wrapper { max-width: 85vw; height: 50vh; }
 
-            /* 移动端 Loader 调整 */
-            .loader-counter { font-size: 15vw; }
-            .loader-brand { font-size: 10px; }
+            .loader-shape { width: 20px; height: 20px; }
+            .loader-counter { font-size: 10px; }
 
-            /* 移动端列表重置为单列垂直排列 */
             .gallery-item.row-layout, .gallery-item.row-layout.reverse { 
                 flex-direction: column; gap: 30px; align-items: flex-start; 
             }
@@ -502,21 +444,15 @@
 </head>
 <body>
 
-    <!-- 修改 Loader 的 HTML 结构以支持全新进度条设计 -->
+    <!-- 简约白色灵动 Loading 动画 -->
     <div id="page-loader">
         <div class="loader-content">
-            <div class="loader-text-wrap">
-                <span class="loader-brand">XIANG VISUALS</span>
-                <span class="loader-counter" id="loader-counter">0%</span>
-            </div>
-            <div class="loader-progress-wrap">
-                <div class="loader-progress-bar" id="loader-bar"></div>
-            </div>
+            <div class="loader-shape"></div>
+            <div class="loader-counter" id="loader-counter">0%</div>
         </div>
     </div>
 
     <div id="page-transition"></div>
-
     <div class="cursor" id="cursor"></div>
 
     <header class="site-header" id="site-header">
@@ -537,14 +473,16 @@
 
     <main>
         <div id="works" class="view-section active">
+            <!-- -->
             <section class="hero-section">
                 <div class="hero-layout">
                     <div class="hero-meta left">
                         <span>SELECTED WORKS</span><span class="line"></span><span>2020 — 2026</span>
                     </div>
                     
-                    <div class="hero-image-wrapper">
-                        <img id="hero-img" src="" alt="Hero Featured Work">
+                    <div class="hero-image-wrapper" id="hero-wrapper">
+                        <!-- 现改为单张主图，结合光标的反相效果完成全新交互 -->
+                        <img id="hero-img-main" class="hero-main" src="" alt="Hero Featured Work">
                     </div>
 
                     <div class="hero-meta right">
@@ -560,109 +498,72 @@
                 </div>
             </section>
 
-            <!-- 全新设计的交错列表容器 -->
             <section class="gallery-container">
                 <div class="gallery-list" id="gallery-grid">
                     
-                    <!-- 项目 1：图左文右 -->
                     <div class="gallery-item row-layout" 
                          data-title="灰度架构 / Grayscale Architecture" 
                          data-meta="2023 / DALIAN"
                          data-story="黑与白的极致对撞，抽离色彩的喧嚣，让光影成为建筑的骨血，线条成为空间的诗行。每一格画面，都是对城市肌理最克制的艺术解构。|在灰度的层次里，建筑的轮廓与城市的呼吸悄然共振。摒弃浮华的修饰，黑白镜头定格的，是空间最本真的力量，与城市静默的灵魂。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0657.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0280.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg">
-                        
-                        <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg" alt="Grayscale Architecture">
-                        </div>
+                        <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg" alt="Grayscale Architecture"></div>
                         <div class="row-info">
-                            <span class="row-num">01</span>
-                            <h3 class="row-title">灰度架构<span>Grayscale Architecture</span></h3>
-                            <span class="row-meta">2023 / DALIAN</span>
+                            <span class="row-num">01</span><h3 class="row-title">灰度架构<span>Grayscale Architecture</span></h3><span class="row-meta">2023 / DALIAN</span>
                         </div>
                     </div>
                     
-                    <!-- 项目 2：反转布局 (reverse) - 图右文左 -->
                     <div class="gallery-item row-layout reverse"
                          data-title="色彩的温度 / The Temperature of Color" 
                          data-meta="2021 / BEIJING"
                          data-story="色彩不仅是视觉的表象，更是情绪的显影，从落日的余晖到几何的浓烈碰撞，色调定义了瞬间的温度。|镜头捕捉光色交织的叙事，在冷暖对比的纯粹视觉中，定格最直观的感官记忆。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_3550.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1387.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/20241123-_L5A7867_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0355.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0325.jpg">
-                        
-                        <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg" alt="The Temperature of Color">
-                        </div>
+                        <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg" alt="The Temperature of Color"></div>
                         <div class="row-info">
-                            <span class="row-num">02</span>
-                            <h3 class="row-title">色彩的温度<span>The Temperature of Color</span></h3>
-                            <span class="row-meta">2021 / BEIJING</span>
+                            <span class="row-num">02</span><h3 class="row-title">色彩的温度<span>The Temperature of Color</span></h3><span class="row-meta">2021 / BEIJING</span>
                         </div>
                     </div>
 
-                    <!-- 项目 3 -->
                     <div class="gallery-item row-layout"
                          data-title="几何与留白 / Geometry and Negative Space" 
                          data-meta="2022 / BEIJNG"
                          data-story="剥离多余的喧嚣，取景框内只留下纯粹的几何与线条。|摄影是一场做减法的艺术，在极致的留白与锋利的切割间，重构空间的绝对理性与平静。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/2ABA18B3-761A-4B6C-BF2A-B79CEB33B064_1_102_o.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_3545.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0072.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_1367.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0063.jpg">
-                        
-                         <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg" alt="Geometry and Negative Space">
-                        </div>
+                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg" alt="Geometry and Negative Space"></div>
                         <div class="row-info">
-                            <span class="row-num">03</span>
-                            <h3 class="row-title">几何与留白<span>Geometry and Negative Space</span></h3>
-                            <span class="row-meta">2022 / BEIJING</span>
+                            <span class="row-num">03</span><h3 class="row-title">几何与留白<span>Geometry and Negative Space</span></h3><span class="row-meta">2022 / BEIJING</span>
                         </div>
                     </div>
 
-                    <!-- 项目 4 (reverse) -->
                     <div class="gallery-item row-layout reverse"
                          data-title="仰望的刻度 / The Scale of Time" 
                          data-meta="2023 / DALIAN"
                          data-story="云的形态是时间的具象化，远处的白云如同静止的雪山，暗沉的积云则像海浪般汹涌，站在大连的海岸线上看着它们聚拢又消散，摄影的意义或许就是把这种转瞬即逝的宏大折叠进一张二维的图像里成为永恒。|站在大连的海岸线上，透过取景框看着它们在无尽的蓝中聚拢又消散，仿佛能体会到气流与天空交锋的瞬息万变，摄影的意义或许不仅仅是按下快门的本能，更是试图把这种转瞬即逝的宏大与敬畏小心翼翼地折叠进一张二维的图像里，让那些原本会被时间带走的瞬间，最终凝固成纯粹且永恒的视觉张力。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0431.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0679.jpg">
-                        
-                         <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg" alt="The Scale of Time">
-                        </div>
+                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg" alt="The Scale of Time"></div>
                         <div class="row-info">
-                            <span class="row-num">04</span>
-                            <h3 class="row-title">仰望的刻度<span>The Scale of Time</span></h3>
-                            <span class="row-meta">2023 / DALIAN</span>
+                            <span class="row-num">04</span><h3 class="row-title">仰望的刻度<span>The Scale of Time</span></h3><span class="row-meta">2023 / DALIAN</span>
                         </div>
                     </div>
 
-                    <!-- 项目 5 -->
                     <div class="gallery-item row-layout"
                          data-title="空濛之境 / The Hazy Realm" 
                          data-meta="2023 / DALIAN"
                          data-story="雾霭漫过水面与天际，把世界揉成一片柔软的灰蓝。桥与岛在朦胧里若隐若现，所有喧嚣都沉在雾里，只剩呼吸与光影的温柔共振。|天地被雾色晕染成淡墨长卷，轮廓消隐，边界模糊。在这半明半暗的留白里，我们与世界温柔对视，听见寂静里的回响。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/3170035~2_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_1459.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/6.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_2067.jpg">
-                        
-                         <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG" alt="The Hazy Realm">
-                        </div>
+                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG" alt="The Hazy Realm"></div>
                         <div class="row-info">
-                            <span class="row-num">05</span>
-                            <h3 class="row-title">空濛之境<span>The Hazy Realm</span></h3>
-                            <span class="row-meta">2023 / DALIAN</span>
+                            <span class="row-num">05</span><h3 class="row-title">空濛之境<span>The Hazy Realm</span></h3><span class="row-meta">2023 / DALIAN</span>
                         </div>
                     </div>
 
-                    <!-- 项目 6 (reverse) -->
                     <div class="gallery-item row-layout reverse"
                          data-title="天际轮廓 / Skyline Contours" 
                          data-meta="2023 / DALIAN"
                          data-story="当视线越过山脊，城市的建筑肌理在晨昏的薄雾中安静地舒展。|沿着山海的交界线俯瞰，用镜头丈量天际的起伏，定格这座城市最宏大的静谧。"
                          data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0491.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0249.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_4272.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_9589.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0568.jpg">
-                        
-                         <div class="row-img-wrap">
-                            <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg" alt="Skyline Contours">
-                        </div>
+                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg" alt="Skyline Contours"></div>
                         <div class="row-info">
-                            <span class="row-num">06</span>
-                            <h3 class="row-title">天际轮廓<span>Skyline Contours</span></h3>
-                            <span class="row-meta">2023 / DALIAN</span>
+                            <span class="row-num">06</span><h3 class="row-title">天际轮廓<span>Skyline Contours</span></h3><span class="row-meta">2023 / DALIAN</span>
                         </div>
                     </div>
 
@@ -681,24 +582,11 @@
                         <h1>XIANG</h1>
                         <h2>摄影师 · 3D 艺术家 · 极客</h2>
                         <p>捕捉光影中的静谧与秩序。<br>在这个喧嚣的世界里，我试图通过镜头做减法，寻找那一抹纯粹的平衡。</p>
-                        
                         <div class="achievements">
-                            <div class="achieve-item">
-                                <span class="achieve-num">01</span>
-                                <span class="achieve-text">1x.com 获奖摄影师</span>
-                            </div>
-                            <div class="achieve-item">
-                                <span class="achieve-num">02</span>
-                                <span class="achieve-text">500px / 图虫 签约摄影师</span>
-                            </div>
-                            <div class="achieve-item">
-                                <span class="achieve-num">03</span>
-                                <span class="achieve-text">vivo 影像大赛第二名</span>
-                            </div>
-                            <div class="achieve-item">
-                                <span class="achieve-num">04</span>
-                                <span class="achieve-text">虚拟城市复刻发起人</span>
-                            </div>
+                            <div class="achieve-item"><span class="achieve-num">01</span><span class="achieve-text">1x.com 获奖摄影师</span></div>
+                            <div class="achieve-item"><span class="achieve-num">02</span><span class="achieve-text">500px / 图虫 签约摄影师</span></div>
+                            <div class="achieve-item"><span class="achieve-num">03</span><span class="achieve-text">vivo 影像大赛第二名</span></div>
+                            <div class="achieve-item"><span class="achieve-num">04</span><span class="achieve-text">虚拟城市复刻发起人</span></div>
                         </div>
                     </div>
                 </div>
@@ -707,43 +595,22 @@
     </main>
 
     <footer class="site-footer">
-        <div class="footer-left">
-            &copy; 2021-2026 XIANGVISUALS. ALL RIGHTS RESERVED.
-        </div>
-        <div class="footer-right">
-            DESIGNED & PHOTOGRAPHED BY XIANG
-        </div>
+        <div class="footer-left">&copy; 2021-2026 XIANGVISUALS. ALL RIGHTS RESERVED.</div>
+        <div class="footer-right">DESIGNED & PHOTOGRAPHED BY XIANG</div>
     </footer>
 
+    <!-- 模态框 HTML 结构保持原样 -->
     <div class="detail-modal" id="detail-modal">
-        <button class="minimal-close-btn" id="modal-close">
-            <span class="close-text">CLOSE</span>
-            <span class="close-icon"></span>
-        </button>
-
+        <button class="minimal-close-btn" id="modal-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <div class="detail-content-wrapper">
-            <div class="detail-header">
-                <h2 id="detail-title">Project Title</h2>
-                <div class="detail-meta" id="detail-meta">Date / Location</div>
-            </div>
-            
-            <div class="detail-text-grid">
-                <div class="detail-story-col" id="detail-story-1">Story text 1...</div>
-                <div class="detail-story-col" id="detail-story-2">Story text 2...</div>
-            </div>
-
-            <div class="detail-images" id="detail-images">
-                <!-- 图片将由 JS 动态插入到这里 -->
-            </div>
+            <div class="detail-header"><h2 id="detail-title">Project Title</h2><div class="detail-meta" id="detail-meta">Date / Location</div></div>
+            <div class="detail-text-grid"><div class="detail-story-col" id="detail-story-1"></div><div class="detail-story-col" id="detail-story-2"></div></div>
+            <div class="detail-images" id="detail-images"></div>
         </div>
     </div>
 
     <div class="zoom-modal" id="zoom-modal">
-        <button class="minimal-close-btn" id="zoom-close">
-            <span class="close-text">CLOSE</span>
-            <span class="close-icon"></span>
-        </button>
-
+        <button class="minimal-close-btn" id="zoom-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <img id="zoom-img" src="" alt="Zoomed View">
     </div>
 
@@ -752,121 +619,114 @@
     ========================================== -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            /* ==========================================
-               0. 自定义主页随机库
-            ========================================== */
+            
+            const isTouchDevice = ('ontouchstart' in window) || 
+                                  (navigator.maxTouchPoints > 0) || 
+                                  window.matchMedia("(pointer: coarse)").matches;
+
             const heroImagesDatabase = [
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/2-2.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/IMG_0587.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg"
             ];
-            
             const randomHeroIndex = Math.floor(Math.random() * heroImagesDatabase.length);
-            document.getElementById('hero-img').src = heroImagesDatabase[randomHeroIndex];
-
+            const selectedHeroImage = heroImagesDatabase[randomHeroIndex];
+            
+            // 为主图注入图片源
+            const heroImgMain = document.getElementById('hero-img-main');
+            if(heroImgMain) heroImgMain.src = selectedHeroImage;
 
             /* ==========================================
-               1. 全局 Loading 动画 (全新进度条交互)
+               1. 简约白色 Loading 动画逻辑
             ========================================== */
             let currentProgress = 0;
             const counterEl = document.getElementById('loader-counter');
-            const barEl = document.getElementById('loader-bar');
             const loaderEl = document.getElementById('page-loader');
 
             const simulateLoading = () => {
-                // 模拟非线性的真实加载感
-                currentProgress += Math.floor(Math.random() * 12) + 2;
+                let increment = Math.random() * 15 + 5; 
+                currentProgress += increment;
                 if (currentProgress > 100) currentProgress = 100;
                 
-                counterEl.textContent = currentProgress + '%';
-                barEl.style.width = currentProgress + '%';
+                counterEl.textContent = Math.floor(currentProgress) + '%';
 
                 if (currentProgress < 100) {
-                    setTimeout(simulateLoading, Math.random() * 50 + 20);
+                    setTimeout(simulateLoading, Math.random() * 40 + 30);
                 } else {
-                    // 加载完毕后，触发拉幕退出
                     setTimeout(() => {
                         loaderEl.classList.add('loaded');
-                        // 移除 DOM 阻止后续事件阻挡
-                        setTimeout(() => loaderEl.style.display = 'none', 1200);
-                    }, 400); 
+                        setTimeout(() => loaderEl.style.display = 'none', 1300);
+                    }, 600); 
                 }
             };
-            
-            // 确保 DOM 解析完成后立即启动动画读条
             simulateLoading();
 
             /* ==========================================
-               2. 极致顺滑自定义光标 & 全局事件委托悬停
+               3. 极致顺滑自定义光标
             ========================================== */
             const cursor = document.getElementById('cursor');
-            let mouseX = 0, mouseY = 0;
-            let cursorX = 0, cursorY = 0;
-            let cursorVisible = false;
-
-            const isTouchDevice = ('ontouchstart' in window) || 
-                                  (navigator.maxTouchPoints > 0) || 
-                                  window.matchMedia("(pointer: coarse)").matches;
+            let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0, cursorVisible = false;
 
             if (!isTouchDevice) {
                 document.addEventListener('mousemove', (e) => {
-                    mouseX = e.clientX;
-                    mouseY = e.clientY;
-                    if (!cursorVisible) {
-                        cursor.style.display = 'block';
-                        cursorVisible = true;
-                    }
+                    mouseX = e.clientX; mouseY = e.clientY;
+                    if (!cursorVisible) { cursor.style.display = 'block'; cursorVisible = true; }
                 });
 
                 const renderCursor = () => {
-                    cursorX += (mouseX - cursorX) * 0.2;
-                    cursorY += (mouseY - cursorY) * 0.2;
+                    cursorX += (mouseX - cursorX) * 0.2; cursorY += (mouseY - cursorY) * 0.2;
                     cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%)`;
                     requestAnimationFrame(renderCursor);
                 };
                 requestAnimationFrame(renderCursor);
-
+                
+                // 监听鼠标悬浮，增加主图的专属反相光标处理
                 document.addEventListener('mouseover', (e) => {
-                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) {
-                        cursor.classList.add('hovering');
+                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) { 
+                        cursor.classList.add('hovering'); 
+                    }
+                    if (e.target.closest('#hero-wrapper')) {
+                        cursor.classList.add('hovering-inverse');
                     }
                 });
+                
                 document.addEventListener('mouseout', (e) => {
-                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) {
-                        cursor.classList.remove('hovering');
+                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) { 
+                        cursor.classList.remove('hovering'); 
+                    }
+                    if (e.target.closest('#hero-wrapper')) {
+                        cursor.classList.remove('hovering-inverse');
                     }
                 });
             }
 
-            /* ==========================================
-               3. 页面滚动揭示动画 (Intersection Observer)
-               调整了 rootMargin 使动画在视口内触发得更加精准
-            ========================================== */
+            /* === 4. 页面滚动揭示动画 === */
             const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -100px 0px" };
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target); 
+                        entry.target.classList.add('visible'); observer.unobserve(entry.target); 
                     }
                 });
             }, observerOptions);
 
             const setupScrollAnimations = () => {
                 document.querySelectorAll('.gallery-item').forEach(el => {
-                    el.classList.remove('visible'); 
-                    observer.observe(el);
+                    el.classList.remove('visible'); observer.observe(el);
                 });
             };
             setupScrollAnimations(); 
 
-            /* ==========================================
-               4. SPA 幕布过渡切换
-            ========================================== */
+            /* === 5. SPA 幕布过渡切换 === */
             const navLinks = document.querySelectorAll('.nav-link[data-target]');
             const views = document.querySelectorAll('.view-section');
             const transitionCurtain = document.getElementById('page-transition');
+            
+            let isNavOpen = false, isDetailModalOpen = false, isZoomModalOpen = false;
+            const menuBtn = document.getElementById('menu-btn');
+            const navMenu = document.getElementById('nav-links');
+            const siteHeader = document.getElementById('site-header');
 
             window.switchView = (targetId) => {
                 const currentActiveLink = document.querySelector('.nav-link.active');
@@ -881,162 +741,82 @@
 
                 setTimeout(() => {
                     views.forEach(view => {
-                        if (view.id === targetId) {
-                            view.style.display = 'block';
-                            setTimeout(() => view.classList.add('active'), 20);
-                        } else {
-                            view.classList.remove('active');
-                            view.style.display = 'none';
-                        }
+                        if (view.id === targetId) { view.style.display = 'block'; setTimeout(() => view.classList.add('active'), 20); }
+                        else { view.classList.remove('active'); view.style.display = 'none'; }
                     });
-
                     window.scrollTo({ top: 0, behavior: 'instant' });
-
-                    if(targetId === 'works') {
-                        setupScrollAnimations();
-                    }
+                    if(targetId === 'works') { setupScrollAnimations(); }
 
                     transitionCurtain.classList.add('done');
-                    
                     setTimeout(() => {
                         transitionCurtain.classList.add('no-transition');
                         transitionCurtain.classList.remove('active', 'done');
                         void transitionCurtain.offsetWidth;
                         transitionCurtain.classList.remove('no-transition');
                     }, 800); 
-
                 }, 800); 
 
-                if(isNavOpen) {
-                    isNavOpen = false;
-                    menuBtn.classList.remove('active');
-                    navMenu.classList.remove('nav-open');
-                }
+                if(isNavOpen) { isNavOpen = false; menuBtn.classList.remove('active'); navMenu.classList.remove('nav-open'); }
             };
 
             navLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    switchView(link.dataset.target);
-                });
+                link.addEventListener('click', (e) => { e.preventDefault(); switchView(link.dataset.target); });
             });
-
-            /* ==========================================
-               5. 状态管理与移动端汉堡按钮复用逻辑
-            ========================================== */
-            let isNavOpen = false;
-            let isDetailModalOpen = false;
-            let isZoomModalOpen = false;
-            
-            const menuBtn = document.getElementById('menu-btn');
-            const navMenu = document.getElementById('nav-links');
-            const siteHeader = document.getElementById('site-header');
             
             menuBtn.addEventListener('click', () => {
-                if (isZoomModalOpen) {
-                    closeZoomModal();
-                } else if (isDetailModalOpen) {
-                    closeDetailModal();
-                } else {
-                    isNavOpen = !isNavOpen;
-                    menuBtn.classList.toggle('active', isNavOpen);
-                    navMenu.classList.toggle('nav-open', isNavOpen);
+                if (isZoomModalOpen) { closeZoomModal(); }
+                else if (isDetailModalOpen) { closeDetailModal(); }
+                else {
+                    isNavOpen = !isNavOpen; menuBtn.classList.toggle('active', isNavOpen); navMenu.classList.toggle('nav-open', isNavOpen);
                 }
             });
 
-            /* ==========================================
-               6. 高级组图项目画廊逻辑 (Detail Modal)
-            ========================================== */
+            /* === 6. 高级组图项目画廊逻辑 (Detail Modal) === */
             const detailModal = document.getElementById('detail-modal');
-            const detailTitle = document.getElementById('detail-title');
-            const detailMeta = document.getElementById('detail-meta');
-            const detailStory1 = document.getElementById('detail-story-1');
-            const detailStory2 = document.getElementById('detail-story-2');
             const detailImagesBox = document.getElementById('detail-images');
-            
             const desktopCloseBtn = document.getElementById('modal-close');
 
             document.querySelectorAll('.gallery-item').forEach(item => {
                 item.addEventListener('click', () => {
-                    detailTitle.textContent = item.dataset.title || "Untitled Project";
-                    detailMeta.textContent = item.dataset.meta || "Xiang Visuals";
-                    
+                    document.getElementById('detail-title').textContent = item.dataset.title || "Untitled Project";
+                    document.getElementById('detail-meta').textContent = item.dataset.meta || "Xiang Visuals";
                     const stories = (item.dataset.story || "").split('|');
-                    detailStory1.textContent = stories[0] || "";
-                    detailStory2.textContent = stories[1] || "";
+                    document.getElementById('detail-story-1').textContent = stories[0] || "";
+                    document.getElementById('detail-story-2').textContent = stories[1] || "";
 
                     detailImagesBox.innerHTML = '';
                     const imageUrls = (item.dataset.images || item.dataset.src).split(',');
-                    
                     imageUrls.forEach((url, index) => {
-                        const imgEl = document.createElement('img');
-                        imgEl.src = url.trim();
-                        imgEl.alt = "Project Photograph";
-                        imgEl.onload = () => {
-                            setTimeout(() => {
-                                imgEl.classList.add('loaded');
-                            }, index * 250);
-                        };
+                        const imgEl = document.createElement('img'); imgEl.src = url.trim(); imgEl.alt = "Project Photograph";
+                        imgEl.onload = () => { setTimeout(() => { imgEl.classList.add('loaded'); }, index * 250); };
                         detailImagesBox.appendChild(imgEl);
                     });
 
-                    isDetailModalOpen = true;
-                    menuBtn.classList.add('active'); 
-                    siteHeader.classList.add('over-modal'); 
-
-                    detailModal.style.display = 'block';
-                    document.body.style.overflow = 'hidden'; 
-                    detailModal.scrollTop = 0; 
+                    isDetailModalOpen = true; menuBtn.classList.add('active'); siteHeader.classList.add('over-modal'); 
+                    detailModal.style.display = 'block'; document.body.style.overflow = 'hidden'; detailModal.scrollTop = 0; 
                     setTimeout(() => detailModal.classList.add('show'), 10);
                 });
             });
 
             const closeDetailModal = () => {
-                detailModal.classList.remove('show');
-                document.body.style.overflow = ''; 
-                
-                isDetailModalOpen = false;
-                if (!isNavOpen) {
-                    menuBtn.classList.remove('active'); 
-                }
+                detailModal.classList.remove('show'); document.body.style.overflow = ''; 
+                isDetailModalOpen = false; if (!isNavOpen) { menuBtn.classList.remove('active'); }
                 siteHeader.classList.remove('over-modal'); 
-
-                setTimeout(() => {
-                    detailModal.style.display = 'none';
-                    detailImagesBox.innerHTML = ''; 
-                }, 600); 
+                setTimeout(() => { detailModal.style.display = 'none'; detailImagesBox.innerHTML = ''; }, 600); 
             };
-
             desktopCloseBtn.addEventListener('click', closeDetailModal);
-            
-            detailModal.addEventListener('click', (e) => {
-                if (e.target === detailModal || e.target.classList.contains('detail-content-wrapper')) {
-                    closeDetailModal(); 
-                }
-            });
+            detailModal.addEventListener('click', (e) => { if (e.target === detailModal || e.target.classList.contains('detail-content-wrapper')) { closeDetailModal(); } });
 
-            /* ==========================================
-               7. 单图极致放大模态框及隐式切换逻辑 (Zoom Modal)
-            ========================================== */
+            /* === 7. 单图极致放大模态框及隐式切换逻辑 (Zoom Modal) === */
             const zoomModal = document.getElementById('zoom-modal');
             const zoomImg = document.getElementById('zoom-img');
             const desktopZoomClose = document.getElementById('zoom-close');
-            
-            let currentZoomImages = [];
-            let currentZoomIndex = 0;
-            let updateZoomTimeout;
-            
-            let touchStartX = 0;
-            let touchEndX = 0;
+            let currentZoomImages = [], currentZoomIndex = 0, updateZoomTimeout, touchStartX = 0, touchEndX = 0;
 
             const updateZoomImage = () => {
                 zoomImg.classList.add('updating');
-                
                 clearTimeout(updateZoomTimeout);
-                updateZoomTimeout = setTimeout(() => {
-                    zoomImg.src = currentZoomImages[currentZoomIndex];
-                    zoomImg.classList.remove('updating');
-                }, 250);
+                updateZoomTimeout = setTimeout(() => { zoomImg.src = currentZoomImages[currentZoomIndex]; zoomImg.classList.remove('updating'); }, 250);
             };
 
             detailImagesBox.addEventListener('click', (e) => {
@@ -1044,93 +824,33 @@
                     const imgs = Array.from(detailImagesBox.querySelectorAll('img'));
                     currentZoomImages = imgs.map(img => img.src);
                     currentZoomIndex = currentZoomImages.indexOf(e.target.src);
-                    
-                    zoomImg.src = e.target.src;
-                    isZoomModalOpen = true;
-
-                    zoomModal.style.display = 'flex';
-                    setTimeout(() => zoomModal.classList.add('show'), 10);
+                    zoomImg.src = e.target.src; isZoomModalOpen = true; zoomModal.style.display = 'flex'; setTimeout(() => zoomModal.classList.add('show'), 10);
                 }
             });
 
             const closeZoomModal = () => {
-                zoomModal.classList.remove('show');
-                isZoomModalOpen = false; 
-
-                setTimeout(() => {
-                    zoomModal.style.display = 'none';
-                    zoomImg.src = '';
-                    zoomImg.classList.remove('updating');
-                }, 600);
+                zoomModal.classList.remove('show'); isZoomModalOpen = false; 
+                setTimeout(() => { zoomModal.style.display = 'none'; zoomImg.src = ''; zoomImg.classList.remove('updating'); }, 600);
             };
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
-            
-            zoomModal.addEventListener('click', (e) => {
-                if (e.target === zoomModal) closeZoomModal();
-            });
+            zoomModal.addEventListener('click', (e) => { if (e.target === zoomModal) closeZoomModal(); });
 
-            const handleSwipe = () => {
-                const swipeThreshold = 50; 
-                
-                if (touchEndX < touchStartX - swipeThreshold) {
-                    if (currentZoomIndex < currentZoomImages.length - 1) {
-                        currentZoomIndex++;
-                        updateZoomImage();
-                    }
-                }
-                if (touchEndX > touchStartX + swipeThreshold) {
-                    if (currentZoomIndex > 0) {
-                        currentZoomIndex--;
-                        updateZoomImage();
-                    }
-                }
-            };
-
-            zoomModal.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-
+            zoomModal.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
             zoomModal.addEventListener('touchend', (e) => {
                 touchEndX = e.changedTouches[0].screenX;
-                handleSwipe();
+                const swipeThreshold = 50; 
+                if (touchEndX < touchStartX - swipeThreshold && currentZoomIndex < currentZoomImages.length - 1) { currentZoomIndex++; updateZoomImage(); }
+                if (touchEndX > touchStartX + swipeThreshold && currentZoomIndex > 0) { currentZoomIndex--; updateZoomImage(); }
             }, { passive: true });
 
             document.addEventListener('keydown', (e) => {
                 if (isZoomModalOpen) {
-                    if (e.key === 'ArrowLeft' && currentZoomIndex > 0) {
-                        currentZoomIndex--;
-                        updateZoomImage();
-                    } else if (e.key === 'ArrowRight' && currentZoomIndex < currentZoomImages.length - 1) {
-                        currentZoomIndex++;
-                        updateZoomImage();
-                    } else if (e.key === 'Escape') {
-                        closeZoomModal();
-                    }
+                    if (e.key === 'ArrowLeft' && currentZoomIndex > 0) { currentZoomIndex--; updateZoomImage(); }
+                    else if (e.key === 'ArrowRight' && currentZoomIndex < currentZoomImages.length - 1) { currentZoomIndex++; updateZoomImage(); }
+                    else if (e.key === 'Escape') { closeZoomModal(); }
                 }
             });
-
-        });
-    </script>
-
-    <!-- ==========================================
-         Microsoft Clarity 性能优化加载方案 
-    ========================================== -->
-    <script type="text/javascript">
-        window.addEventListener('load', function() {
-            var initClarity = function() {
-                (function(c,l,a,r,i,t,y){
-                    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-                })(window, document, "clarity", "script", "qt6tim5n2h");
-            };
-
-            if ('requestIdleCallback' in window) {
-                requestIdleCallback(initClarity);
-            } else {
-                setTimeout(initClarity, 1000);
-            }
         });
     </script>
 </body>
