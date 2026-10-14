@@ -755,20 +755,17 @@
             -webkit-backdrop-filter: blur(22px);
             z-index: 2000;
             opacity: 0;
-            visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.68s var(--ease-silky), visibility 0s linear 0.68s;
             overflow-y: auto;
             color: var(--text-main);
             -ms-overflow-style: none;
             scrollbar-width: none;
+            will-change: opacity;
         }
         .detail-modal::-webkit-scrollbar { display: none; }
         .detail-modal.show {
             opacity: 1;
-            visibility: visible;
             pointer-events: auto;
-            transition: opacity 0.68s var(--ease-silky), visibility 0s linear 0s;
         }
 
         .detail-content-wrapper {
@@ -781,18 +778,12 @@
             margin: 0 auto;
         }
 
-        /* 顶部信息区：在中央图片开始放大后，从上方柔和浮现，底部 1px 细线由中心向两侧舒展 */
+        /* 顶部信息区：由 Web Animations API (fill: 'both') 精确驱动从隐藏到浮现，底部 1px 细线由中心向两侧舒展 */
         .detail-header-block {
             position: relative;
             padding-bottom: 18px;
             opacity: 0;
-            transform: translateY(14px);
-            transition: opacity 0.32s ease, transform 0.32s ease;
-        }
-        .detail-modal.show .detail-header-block {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.85s var(--ease-silky) 0.24s, transform 0.85s var(--ease-silky) 0.24s;
+            will-change: transform, opacity;
         }
         .detail-header-line {
             position: absolute;
@@ -803,11 +794,7 @@
             background-color: var(--border-color);
             transform: scaleX(0);
             transform-origin: center center;
-            transition: transform 0.35s var(--ease-silky);
-        }
-        .detail-modal.show .detail-header-line {
-            transform: scaleX(1);
-            transition: transform 0.95s var(--ease-silky) 0.28s;
+            will-change: transform;
         }
 
         .detail-top-bar {
@@ -897,12 +884,6 @@
             box-shadow: 0 28px 68px rgba(0, 0, 0, 0.08);
             transform-origin: center center;
             will-change: transform, opacity;
-            transition: transform 0.78s var(--ease-silky), opacity 0.56s var(--ease-silky), box-shadow 0.78s var(--ease-silky);
-        }
-        .detail-stage-img.switching {
-            opacity: 0;
-            transform: scale(0.975) translateY(8px);
-            transition: transform 0.28s var(--ease-silky), opacity 0.24s ease;
         }
 
         /* 舞台左右两侧由中心向外缓缓浮现的切换箭头与竖向装饰线 */
@@ -918,21 +899,15 @@
             padding: 12px;
             opacity: 0;
             z-index: 5;
-            transition: opacity 0.28s ease, transform 0.28s ease;
+            will-change: transform, opacity;
         }
         .detail-side-nav.prev {
             left: 0;
-            transform: translate(18px, -50%);
+            transform: translate(22px, -50%);
         }
         .detail-side-nav.next {
             right: 0;
-            transform: translate(-18px, -50%);
-        }
-        .detail-modal.show .detail-side-nav.prev,
-        .detail-modal.show .detail-side-nav.next {
-            opacity: 1;
-            transform: translate(0, -50%);
-            transition: opacity 0.85s var(--ease-silky) 0.30s, transform 0.85s var(--ease-silky) 0.30s;
+            transform: translate(-22px, -50%);
         }
         .detail-side-nav .nav-circle {
             width: 40px;
@@ -965,7 +940,7 @@
             height: 14px;
         }
 
-        /* 底部胶片栏：计数器柔和浮现，缩略图由中间向两侧呈阶梯垂落展开（呼应全站切片扩散设计语言） */
+        /* 底部胶片栏：由 Web Animations API (fill: 'both') 驱动缩略图由中间向两侧呈阶梯垂落展开 */
         .detail-filmstrip-bar {
             display: flex;
             flex-direction: column;
@@ -978,13 +953,7 @@
             color: var(--text-sub);
             text-transform: uppercase;
             opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.28s ease, transform 0.28s ease;
-        }
-        .detail-modal.show .detail-filmstrip-counter {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.82s var(--ease-silky) 0.28s, transform 0.82s var(--ease-silky) 0.28s;
+            will-change: transform, opacity;
         }
         .detail-filmstrip-track {
             display: flex;
@@ -1002,35 +971,23 @@
             opacity: 0;
             filter: grayscale(100%);
             clip-path: inset(0% 0% 100% 0%);
-            transform: translateY(12px);
-            transition: opacity 0.28s ease, transform 0.28s ease, clip-path 0.28s ease;
+            transition: filter 0.38s var(--ease-silky), border-color 0.38s var(--ease-silky);
             flex-shrink: 0;
             border: 1px solid transparent;
-        }
-        .detail-modal.show .filmstrip-thumb {
-            opacity: 0.45;
-            clip-path: inset(0% 0% 0% 0%);
-            transform: translateY(0);
-            transition:
-                clip-path 0.78s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
-                opacity 0.68s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
-                transform 0.68s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
-                filter 0.38s var(--ease-silky);
+            will-change: transform, opacity, clip-path;
         }
         .filmstrip-thumb img {
             height: 100%;
-            width: auto;
+            width: 100%;
+            object-fit: cover;
             display: block;
         }
-        .detail-modal.show .filmstrip-thumb:hover {
-            opacity: 0.88;
+        .filmstrip-thumb:hover {
             filter: grayscale(0%);
         }
-        .detail-modal.show .filmstrip-thumb.active {
-            opacity: 1;
+        .filmstrip-thumb.active {
             filter: grayscale(0%);
             border-color: var(--text-main);
-            transform: translateY(-3px);
         }
 
         /* === 悬浮关闭按钮 === */
@@ -1040,14 +997,7 @@
             background: none; border: none; z-index: 2010;
             color: var(--text-main); padding: 8px;
             opacity: 0;
-            transform: translateY(-10px);
-            transition: opacity 0.28s ease, transform 0.28s ease;
-        }
-        .detail-modal.show .minimal-close-btn,
-        .zoom-modal.show .minimal-close-btn {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 0.82s var(--ease-silky) 0.34s, transform 0.82s var(--ease-silky) 0.34s;
+            will-change: transform, opacity;
         }
         .minimal-close-btn .close-text {
             font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: transform 0.35s var(--ease-silky), opacity 0.35s var(--ease-silky);
@@ -1072,15 +1022,12 @@
             z-index: 3000;
             justify-content: center; align-items: center;
             opacity: 0;
-            visibility: hidden;
             pointer-events: none;
-            transition: opacity 0.62s var(--ease-silky), visibility 0s linear 0.62s;
+            will-change: opacity;
         }
         .zoom-modal.show {
             opacity: 1;
-            visibility: visible;
             pointer-events: auto;
-            transition: opacity 0.62s var(--ease-silky), visibility 0s linear 0s;
         }
         .zoom-modal img {
             max-width: 92vw; max-height: 92vh; object-fit: contain;
@@ -1873,6 +1820,9 @@
                             const liteCtx = liteCanvas.getContext('2d');
                             if (liteCtx) {
                                 liteCtx.drawImage(imgEl, 0, 0, targetW, targetH);
+                                try {
+                                    frame.previewUrl = liteCanvas.toDataURL('image/jpeg', 0.85);
+                                } catch (e) {}
                                 inner.replaceChild(liteCanvas, imgEl);
                                 sliceMediaNodes[i] = liteCanvas;
                                 imgEl.removeAttribute('src');
@@ -1889,7 +1839,7 @@
                 });
 
                 slice.addEventListener('click', () => {
-                    if (hasDraggedStrip || entranceProgress < 0.75) return;
+                    if (hasDraggedStrip || entranceProgress < 0.20) return;
                     const d = getSignedWrapDist(i, currentTrackPos);
                     if (Math.abs(d) > 0.38) {
                         glideToTrackPos(Math.round(currentTrackPos + d));
@@ -2085,10 +2035,9 @@
                     }
                 });
 
-                // 静默预热当前正中间主图至放大舞台，确保用户点击中间图片时 0ms 无白闪平滑展开
-                const stageImgEl = document.getElementById('detail-stage-img');
-                if (!isDetailModalOpen && stageImgEl) {
-                    stageImgEl.src = frame.src;
+                // 静默预热当前居中系列与主图至模态框 DOM，确保用户「第一次点击」时所有缩略图与大图早已在内存中就绪！
+                if (!isDetailModalOpen && typeof prewarmModalDOM === 'function') {
+                    prewarmModalDOM(frame.seriesId, frame.idxInSeries);
                 }
             }
 
@@ -2433,10 +2382,13 @@
 
             /* ==========================================
                6. 沉浸式组图模态框：
-               - 中央图片从被点击的原位 (FLIP) 平滑过渡到舞台正中
-               - 四周内容（顶部标题与 1px 中心扩散细线、左右两侧导览按钮、底部由中间向两侧阶梯垂落展开的胶片缩略图、右上角关闭按钮）在主图展开过程中缓缓浮现
+               - 采用原生 Web Animations API (element.animate) 显式驱动首末关键帧，确保「第一次点击」与后续点击 100% 一致丝滑，绝不丢帧！
+               - 预先利用已解码的 500p 轻量画布数据 (previewUrl) 瞬时呈现首帧画面，并在后台无感升级为原图分辨率，彻底消除初次点击时的解码卡顿与白闪
+               - 中央主图从原位置 FLIP 放大至舞台中央，同时四周内容（顶部信息栏、1px 中心扩散细线、左右两侧导览按钮、右上角关闭按钮、底部由中间向两侧阶梯垂落展开的胶片缩略图）缓缓浮现
             ========================================== */
             const detailModal = document.getElementById('detail-modal');
+            const detailHeaderBlock = document.querySelector('.detail-header-block');
+            const detailHeaderLine = document.querySelector('.detail-header-line');
             const detailStageImg = document.getElementById('detail-stage-img');
             const detailFilmstripTrack = document.getElementById('detail-filmstrip-track');
             const detailFilmstripCounter = document.getElementById('detail-filmstrip-counter');
@@ -2445,9 +2397,88 @@
             const detailNextBtn = document.getElementById('detail-next-btn');
             const storyToggleBtn = document.getElementById('story-toggle-btn');
             const storyDrawer = document.getElementById('detail-story-drawer');
+            const SILKY_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-            // 预热当前中心主图到 detailStageImg，确保点击瞬间 0ms 零延迟立即可见并执行 FLIP 过渡
-            detailStageImg.src = allFrames[INITIAL_CENTER].src;
+            let prewarmedSeriesId = -1;
+
+            function cancelAnims(el) {
+                if (el && typeof el.getAnimations === 'function') {
+                    el.getAnimations().forEach(a => a.cancel());
+                }
+            }
+
+            // 辅助函数：将指定 URL 无感加载解码后赋给目标 <img>
+            function setStageImageSeamless(seriesId, photoIdx, fullUrl) {
+                const frameObj = allFrames.find(f => f.seriesId === seriesId && f.idxInSeries === photoIdx);
+                if (detailStageImg.src !== fullUrl) {
+                    if (frameObj && frameObj.previewUrl) {
+                        detailStageImg.src = frameObj.previewUrl;
+                    } else {
+                        detailStageImg.src = fullUrl;
+                    }
+                }
+                const hiResLoader = new Image();
+                hiResLoader.src = fullUrl;
+                const applyFull = () => {
+                    if ((!isDetailModalOpen || (activeModalSeries && activeModalSeries.id === seriesId && activeModalPhotoIdx === photoIdx)) && detailStageImg.src !== fullUrl) {
+                        detailStageImg.src = fullUrl;
+                    }
+                };
+                if (typeof hiResLoader.decode === 'function') {
+                    hiResLoader.decode().then(applyFull).catch(applyFull);
+                } else {
+                    hiResLoader.onload = applyFull;
+                }
+            }
+
+            // 在用户点击之前预先构建并解码当前居中作品所属系列的 DOM 节点，彻底杜绝「初次点击」时的节点创建与图片解码阻塞！
+            function prewarmModalDOM(seriesId, photoIdx) {
+                const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
+                const targetUrl = series.images[photoIdx] || series.images[0];
+                setStageImageSeamless(series.id, photoIdx, targetUrl);
+
+                if (prewarmedSeriesId !== series.id) {
+                    prewarmedSeriesId = series.id;
+                    document.getElementById('detail-badge').textContent = `SERIES ${series.code}`;
+                    document.getElementById('detail-title').textContent = series.fullTitle;
+                    document.getElementById('detail-meta').textContent = `${series.year} / ${series.location}`;
+                    document.getElementById('detail-story-text').textContent = series.story;
+
+                    detailFilmstripTrack.innerHTML = '';
+                    series.images.forEach((url, idx) => {
+                        const thumb = document.createElement('div');
+                        thumb.className = 'filmstrip-thumb' + (idx === photoIdx ? ' active' : '');
+                        const frameObj = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === idx);
+                        const thumbAr = frameObj ? frameObj.aspectRatio : 1.42;
+                        const thumbSrc = (frameObj && frameObj.previewUrl) ? frameObj.previewUrl : url;
+                        thumb.style.width = `${Math.round(68 * thumbAr)}px`;
+                        const tImg = document.createElement('img');
+                        tImg.src = thumbSrc;
+                        tImg.alt = `Thumbnail ${idx + 1}`;
+                        tImg.decoding = 'async';
+                        if (typeof tImg.decode === 'function') {
+                            tImg.decode().catch(() => {});
+                        }
+                        thumb.appendChild(tImg);
+                        thumb.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            updateModalStagePhoto(idx);
+                        });
+                        detailFilmstripTrack.appendChild(thumb);
+                    });
+                } else {
+                    Array.from(detailFilmstripTrack.children).forEach((thumb, idx) => {
+                        thumb.classList.toggle('active', idx === photoIdx);
+                    });
+                }
+
+                const curStr = String(photoIdx + 1).padStart(2, '0');
+                const totStr = String(series.images.length).padStart(2, '0');
+                detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
+            }
+
+            // 页面初始化时立即预热默认居中作品 (IMG_0635.jpg) 的模态框 DOM 与大图解码
+            prewarmModalDOM(allFrames[INITIAL_CENTER].seriesId, allFrames[INITIAL_CENTER].idxInSeries);
 
             storyToggleBtn.addEventListener('click', () => {
                 const isOpen = storyDrawer.classList.toggle('open');
@@ -2460,21 +2491,35 @@
                 activeModalPhotoIdx = (newIdx + activeModalSeries.images.length) % activeModalSeries.images.length;
                 const targetUrl = activeModalSeries.images[activeModalPhotoIdx];
 
-                detailStageImg.classList.add('switching');
+                if (typeof detailStageImg.animate === 'function') {
+                    detailStageImg.animate([
+                        { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' },
+                        { opacity: 0, transform: 'translate3d(0, 8px, 0) scale(0.975)' }
+                    ], { duration: 180, easing: SILKY_EASE, fill: 'forwards' });
+                }
+
                 setTimeout(() => {
-                    detailStageImg.src = targetUrl;
-                    detailStageImg.onload = () => {
-                        detailStageImg.classList.remove('switching');
-                    };
-                    setTimeout(() => detailStageImg.classList.remove('switching'), 60);
-                }, 180);
+                    setStageImageSeamless(activeModalSeries.id, activeModalPhotoIdx, targetUrl);
+                    if (typeof detailStageImg.animate === 'function') {
+                        detailStageImg.animate([
+                            { opacity: 0, transform: 'translate3d(0, -6px, 0) scale(0.98)' },
+                            { opacity: 1, transform: 'translate3d(0, 0, 0) scale(1)' }
+                        ], { duration: 380, easing: SILKY_EASE, fill: 'forwards' });
+                    }
+                }, 175);
 
                 const curStr = String(activeModalPhotoIdx + 1).padStart(2, '0');
                 const totStr = String(activeModalSeries.images.length).padStart(2, '0');
                 detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
 
                 Array.from(detailFilmstripTrack.children).forEach((thumb, i) => {
-                    thumb.classList.toggle('active', i === activeModalPhotoIdx);
+                    const isAct = i === activeModalPhotoIdx;
+                    thumb.classList.toggle('active', isAct);
+                    if (typeof thumb.animate === 'function') {
+                        thumb.animate([
+                            { opacity: isAct ? 1 : 0.45, transform: isAct ? 'translateY(-3px)' : 'translateY(0px)' }
+                        ], { duration: 280, easing: SILKY_EASE, fill: 'forwards' });
+                    }
                 });
             }
 
@@ -2497,47 +2542,32 @@
                 activeModalPhotoIdx = initialPhotoIdx;
                 lastClickedSourceEl = sourceEl || null;
 
-                // 记录被点击图片在视口中的精确矩形，用于 FLIP 共享几何过渡
+                // 1. 记录被点击图片在屏幕上的精确几何矩形 (FLIP 起点)
                 const sourceRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
 
-                document.getElementById('detail-badge').textContent = `SERIES ${series.code}`;
-                document.getElementById('detail-title').textContent = series.fullTitle;
-                document.getElementById('detail-meta').textContent = `${series.year} / ${series.location}`;
-                document.getElementById('detail-story-text').textContent = series.story;
+                // 2. 复用已预热的模态框 DOM（若从瀑布流点击了其他系列则即时同步），避免初次点击时重建 DOM 导致丢帧
+                prewarmModalDOM(series.id, initialPhotoIdx);
 
                 storyDrawer.classList.remove('open');
                 storyToggleBtn.classList.remove('active');
                 storyToggleBtn.textContent = '+ STORY NOTE';
 
-                // 底部胶片缩略图：赋予由中心选中项向左右两侧扩散的阶梯延迟 (--thumb-delay)，与画廊倒 V 扩散动效一脉相承
-                detailFilmstripTrack.innerHTML = '';
-                series.images.forEach((url, idx) => {
-                    const thumb = document.createElement('div');
-                    thumb.className = 'filmstrip-thumb' + (idx === initialPhotoIdx ? ' active' : '');
-                    const distFromActive = Math.abs(idx - initialPhotoIdx);
-                    thumb.style.setProperty('--thumb-delay', `${distFromActive * 65}ms`);
-                    thumb.innerHTML = `<img src="${url}" alt="Thumbnail ${idx + 1}" loading="lazy">`;
-                    thumb.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        updateModalStagePhoto(idx);
-                    });
-                    detailFilmstripTrack.appendChild(thumb);
+                const thumbNodes = Array.from(detailFilmstripTrack.children);
+                thumbNodes.forEach((thumb, idx) => {
+                    const frameObj = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === idx);
+                    if (frameObj) {
+                        thumb.style.width = `${Math.round(68 * frameObj.aspectRatio)}px`;
+                    }
                 });
-
-                const targetUrl = series.images[initialPhotoIdx];
-                if (detailStageImg.src !== targetUrl) {
-                    detailStageImg.src = targetUrl;
-                }
-                const curStr = String(initialPhotoIdx + 1).padStart(2, '0');
-                const totStr = String(series.images.length).padStart(2, '0');
-                detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
 
                 isDetailModalOpen = true;
                 menuBtn.classList.add('active');
                 siteHeader.classList.add('over-modal');
                 document.body.style.overflow = 'hidden';
+                document.body.classList.add('modal-viewing');
+                detailModal.classList.add('show');
 
-                // 计算 FLIP 起点位移与缩放比例（让大图第一帧严格对齐被点击的中心图片）
+                // 3. 计算 FLIP 起点位移与缩放比例（让中央大图第 0 帧严格对齐被点击的中心图片）
                 const matchingFrame = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === initialPhotoIdx);
                 const ar = matchingFrame ? matchingFrame.aspectRatio : 1.42;
                 const vw = window.innerWidth;
@@ -2548,8 +2578,8 @@
                 const estTargetH = estTargetW / ar;
 
                 let flipDx = 0;
-                let flipDy = 22;
-                let flipScale = 0.76;
+                let flipDy = 24;
+                let flipScale = 0.72;
                 if (sourceRect && sourceRect.width > 10 && sourceRect.height > 10) {
                     const srcCenterX = sourceRect.left + sourceRect.width / 2;
                     const srcCenterY = sourceRect.top + sourceRect.height / 2;
@@ -2557,66 +2587,147 @@
                     const stageCenterY = vh * 0.48;
                     flipDx = srcCenterX - stageCenterX;
                     flipDy = srcCenterY - stageCenterY;
-                    flipScale = Math.max(0.38, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
+                    flipScale = Math.max(0.36, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
                 }
 
-                // 第一帧：先将模态框设为 visibility: visible（保证全部子元素脱离 hidden 状态并完成初始样式提交），
-                // 同时将中央大图精准放置在被点击图片的原位置与原缩放比例，四周元素全部处于初始隐藏位置
-                detailModal.classList.remove('show');
-                detailModal.style.visibility = 'visible';
-                detailStageImg.style.transition = 'none';
-                detailStageImg.style.transform = `translate3d(${flipDx.toFixed(1)}px, ${flipDy.toFixed(1)}px, 0) scale(${flipScale.toFixed(3)})`;
-                detailStageImg.style.opacity = '0.92';
-                void detailModal.offsetHeight;
-                void detailStageImg.getBoundingClientRect();
+                // 4. 使用 Web Animations API + fill: 'both'（保证在 delay 期间严格锁定第 0 帧隐藏状态，绝不闪现！），初次点击 100% 丝滑！
+                if (typeof detailModal.animate === 'function') {
+                    [detailModal, detailStageImg, detailHeaderBlock, detailHeaderLine, detailPrevBtn, detailNextBtn, desktopCloseBtn, detailFilmstripCounter, ...thumbNodes].forEach(cancelAnims);
 
-                // 双重 requestAnimationFrame：确保浏览器已完成第一帧（原位状态）合成，
-                // 随后中央大图丝滑放大至舞台中央，四周内容（顶栏、两侧导览、底部胶片阶梯）按延迟依次缓缓浮现！
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        if (!isDetailModalOpen) return;
-                        document.body.classList.add('modal-viewing');
-                        detailModal.classList.add('show');
-                        detailStageImg.style.transition = 'transform 0.82s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
-                        detailStageImg.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
-                        detailStageImg.style.opacity = '1';
+                    // (a) 背景柔光遮罩渐显
+                    detailModal.animate([
+                        { opacity: 0 },
+                        { opacity: 1 }
+                    ], { duration: 640, easing: SILKY_EASE, fill: 'both' });
+
+                    // (b) 中央大图从点击原位丝滑放大至舞台中央
+                    detailStageImg.animate([
+                        { transform: `translate3d(${flipDx.toFixed(1)}px, ${flipDy.toFixed(1)}px, 0) scale(${flipScale.toFixed(3)})`, opacity: 0.92 },
+                        { transform: 'translate3d(0px, 0px, 0) scale(1)', opacity: 1 }
+                    ], { duration: 840, easing: SILKY_EASE, fill: 'both' });
+
+                    // (c) 上方：顶部信息栏缓缓浮现 + 1px 装饰细线由中心向两侧展开
+                    if (detailHeaderBlock) {
+                        detailHeaderBlock.animate([
+                            { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
+                            { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+                        ], { duration: 780, delay: 220, easing: SILKY_EASE, fill: 'both' });
+                    }
+                    if (detailHeaderLine) {
+                        detailHeaderLine.animate([
+                            { transform: 'scaleX(0)' },
+                            { transform: 'scaleX(1)' }
+                        ], { duration: 920, delay: 260, easing: SILKY_EASE, fill: 'both' });
+                    }
+
+                    // (d) 左右两侧：导览按钮从靠近中心图片两侧缓缓向外舒展浮现
+                    if (detailPrevBtn && !isMobileView()) {
+                        detailPrevBtn.animate([
+                            { opacity: 0, transform: 'translate(22px, -50%)' },
+                            { opacity: 1, transform: 'translate(0px, -50%)' }
+                        ], { duration: 800, delay: 280, easing: SILKY_EASE, fill: 'both' });
+                    }
+                    if (detailNextBtn && !isMobileView()) {
+                        detailNextBtn.animate([
+                            { opacity: 0, transform: 'translate(-22px, -50%)' },
+                            { opacity: 1, transform: 'translate(0px, -50%)' }
+                        ], { duration: 800, delay: 280, easing: SILKY_EASE, fill: 'both' });
+                    }
+
+                    // (e) 右上角：关闭按钮柔和浮现
+                    if (desktopCloseBtn && !isMobileView()) {
+                        desktopCloseBtn.animate([
+                            { opacity: 0, transform: 'translate3d(0, -12px, 0)' },
+                            { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+                        ], { duration: 760, delay: 320, easing: SILKY_EASE, fill: 'both' });
+                    }
+
+                    // (f) 下方：计数器与胶片缩略图由中间向两侧呈倒 V 阶梯自上而下垂落浮现
+                    if (detailFilmstripCounter) {
+                        detailFilmstripCounter.animate([
+                            { opacity: 0, transform: 'translate3d(0, 12px, 0)' },
+                            { opacity: 1, transform: 'translate3d(0, 0, 0)' }
+                        ], { duration: 740, delay: 250, easing: SILKY_EASE, fill: 'both' });
+                    }
+                    thumbNodes.forEach((thumb, idx) => {
+                        const dist = Math.abs(idx - initialPhotoIdx);
+                        const isAct = idx === initialPhotoIdx;
+                        thumb.animate([
+                            {
+                                opacity: 0,
+                                clipPath: 'inset(0% 0% 100% 0%)',
+                                transform: 'translate3d(0, 14px, 0)'
+                            },
+                            {
+                                opacity: isAct ? 1 : 0.45,
+                                clipPath: 'inset(0% 0% 0% 0%)',
+                                transform: isAct ? 'translate3d(0, -3px, 0)' : 'translate3d(0, 0px, 0)'
+                            }
+                        ], {
+                            duration: 760,
+                            delay: 260 + dist * 65,
+                            easing: SILKY_EASE,
+                            fill: 'both'
+                        });
                     });
-                });
+                }
             }
 
             function closeDetailModal() {
-                document.body.classList.remove('modal-viewing');
-                detailModal.classList.remove('show');
+                if (!isDetailModalOpen) return;
                 isDetailModalOpen = false;
+                document.body.classList.remove('modal-viewing');
                 if (!isNavOpen) { menuBtn.classList.remove('active'); }
                 siteHeader.classList.remove('over-modal');
+                document.body.style.overflow = '';
 
-                // 收起时四周内容先行隐去，中央大图沿着原点击位置轻盈缩回
+                let targetDx = 0;
+                let targetDy = 18;
+                let targetScale = 0.88;
                 if (lastClickedSourceEl) {
                     const rect = lastClickedSourceEl.getBoundingClientRect();
                     if (rect && rect.width > 10 && rect.top >= -100 && rect.bottom <= window.innerHeight + 100) {
-                        const dx = (rect.left + rect.width / 2 - window.innerWidth / 2) * 0.72;
-                        const dy = (rect.top + rect.height / 2 - window.innerHeight * 0.48) * 0.72;
-                        detailStageImg.style.transition = 'transform 0.62s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1)';
-                        detailStageImg.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(0.72)`;
-                        detailStageImg.style.opacity = '0';
-                    } else {
-                        detailStageImg.style.transform = 'translate3d(0, 18px, 0) scale(0.92)';
-                        detailStageImg.style.opacity = '0';
+                        targetDx = (rect.left + rect.width / 2 - window.innerWidth / 2) * 0.78;
+                        targetDy = (rect.top + rect.height / 2 - window.innerHeight * 0.48) * 0.78;
+                        targetScale = 0.68;
                     }
-                } else {
-                    detailStageImg.style.transform = 'translate3d(0, 18px, 0) scale(0.92)';
-                    detailStageImg.style.opacity = '0';
                 }
 
-                document.body.style.overflow = '';
-                setTimeout(() => {
-                    if (!isDetailModalOpen) {
-                        detailModal.style.visibility = '';
-                        detailStageImg.style.transform = '';
-                        detailStageImg.style.opacity = '';
-                    }
-                }, 680);
+                if (typeof detailModal.animate === 'function') {
+                    // 四周内容先行轻盈隐去
+                    [detailHeaderBlock, detailFilmstripCounter, desktopCloseBtn].forEach(el => {
+                        if (el) {
+                            el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+                        }
+                    });
+                    [detailPrevBtn, detailNextBtn].forEach(el => {
+                        if (el && !isMobileView()) {
+                            el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
+                        }
+                    });
+                    Array.from(detailFilmstripTrack.children).forEach((thumb) => {
+                        thumb.animate([{ opacity: 0.5 }, { opacity: 0 }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
+                    });
+
+                    // 中央大图平滑缩回原点击位置
+                    detailStageImg.animate([
+                        { transform: 'translate3d(0px, 0px, 0) scale(1)', opacity: 1 },
+                        { transform: `translate3d(${targetDx.toFixed(1)}px, ${targetDy.toFixed(1)}px, 0) scale(${targetScale})`, opacity: 0 }
+                    ], { duration: 540, easing: SILKY_EASE, fill: 'forwards' });
+
+                    const fadeOut = detailModal.animate([
+                        { opacity: 1 },
+                        { opacity: 0 }
+                    ], { duration: 540, easing: SILKY_EASE, fill: 'forwards' });
+
+                    fadeOut.onfinish = () => {
+                        if (!isDetailModalOpen) {
+                            detailModal.classList.remove('show');
+                        }
+                    };
+                } else {
+                    detailModal.classList.remove('show');
+                }
             }
 
             desktopCloseBtn.addEventListener('click', closeDetailModal);
@@ -2637,25 +2748,31 @@
                 e.stopPropagation();
                 zoomImg.src = detailStageImg.src;
                 isZoomModalOpen = true;
-                zoomModal.classList.remove('show');
-                zoomModal.style.visibility = 'visible';
-                void zoomModal.offsetHeight;
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        if (!isZoomModalOpen) return;
-                        zoomModal.classList.add('show');
-                    });
-                });
+                zoomModal.classList.add('show');
+                if (typeof zoomModal.animate === 'function') {
+                    zoomModal.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 520, easing: SILKY_EASE, fill: 'forwards' });
+                    zoomImg.animate([
+                        { transform: 'scale(0.88)', opacity: 0.4 },
+                        { transform: 'scale(1)', opacity: 1 }
+                    ], { duration: 680, easing: SILKY_EASE, fill: 'forwards' });
+                }
             });
 
             function closeZoomModal() {
-                zoomModal.classList.remove('show');
+                if (!isZoomModalOpen) return;
                 isZoomModalOpen = false;
-                setTimeout(() => {
-                    if (!isZoomModalOpen) {
-                        zoomModal.style.visibility = '';
-                    }
-                }, 620);
+                if (typeof zoomModal.animate === 'function') {
+                    zoomImg.animate([
+                        { transform: 'scale(1)', opacity: 1 },
+                        { transform: 'scale(0.90)', opacity: 0 }
+                    ], { duration: 460, easing: SILKY_EASE, fill: 'forwards' });
+                    const anim = zoomModal.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 460, easing: SILKY_EASE, fill: 'forwards' });
+                    anim.onfinish = () => {
+                        if (!isZoomModalOpen) zoomModal.classList.remove('show');
+                    };
+                } else {
+                    zoomModal.classList.remove('show');
+                }
             }
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
