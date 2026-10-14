@@ -4,23 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>XIANGVISUALS</title>
-    <!-- 1. 添加网站图标 (Favicon) -->
+    <!-- 1. 网站图标 (Favicon) -->
     <link rel="icon" href="https://cllli.oss-cn-beijing.aliyuncs.com/logo/logo.svg" type="image/svg+xml">
-    <!-- 2. 引入高级感字体 -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@200;400;600;700&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap">
+    <!-- 2. 引入高级感字体 (非阻塞加载) -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@200;400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap" media="print" onload="this.media='all'">
     
     <!-- 延迟加载 Microsoft Clarity 以确保不影响首屏性能 -->
     <script type="text/javascript">
-        // 等待核心资源加载完毕后再执行
         window.addEventListener('load', function() {
-            // 额外延迟 1.5 秒，避开网站初始的 Loading 动画计算，不抢占主线程
             setTimeout(function() {
                 (function(c,l,a,r,i,t,y){
                     c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
                     t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
                     y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
                 })(window, document, "clarity", "script", "qt6tim5n2h");
-            }, 1500); 
+            }, 2000); 
         });
     </script>
 
@@ -32,12 +30,16 @@
             --bg-color: #ffffff;
             --text-main: #0a0a0a;
             --text-sub: #888888;
-            --border-color: #e0e0e0;
+            --text-muted: #b2b2b2;
+            --border-color: #e2e2e2;
             --font-serif: 'Cinzel', 'Noto Serif SC', serif;
-            --font-sans: 'Montserrat', sans-serif;
+            --font-editorial: 'Cormorant Garamond', 'Noto Serif SC', serif;
+            --font-sans: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            /* 全站统一的高级画廊丝滑缓动曲线 */
             --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-silky: cubic-bezier(0.22, 1, 0.36, 1);
             --ease-gentle: cubic-bezier(0.2, 0.8, 0.2, 1);
-            --ease-dramatic: cubic-bezier(0.7, 0, 0.2, 1);
+            --ease-curtain: cubic-bezier(0.76, 0, 0.24, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -45,7 +47,8 @@
         ::-webkit-scrollbar { display: none; }
         html, body {
             -ms-overflow-style: none;
-            scrollbar-width: none; 
+            scrollbar-width: none;
+            scroll-behavior: smooth;
         }
 
         body {
@@ -53,43 +56,80 @@
             color: var(--text-main);
             font-family: var(--font-sans);
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        /* === 简约白色灵动 Loading 动画 === */
+        /* =========================================================
+           1. 极简建筑画框与切片流光加载动画 (Kinetic Frame & Slice Loader)
+           - 零文字，完全由契合全站视觉母题的简单几何图形构成：
+             中央 1px 极细取景画框 + 左右各 4 根由中心向两侧阶梯扩散的垂直切片线
+           - 全程由单一连续 requestAnimationFrame 时间轴驱动：
+             一阶段：9 根垂直几何线由中心向两侧自上而下丝滑垂落（呼应底部画廊倒 V 扩散）
+             二阶段：正中央细线平滑向两侧推开手风琴，舒展为一枚 1px 极简取景画框（呼应首屏画框构图）
+             三阶段：两侧切片轻盈收拢，中央画框柔和放大消融，无缝衔接首屏主图浮现
+        ========================================================= */
         #page-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-            background-color: #ffffff; z-index: 99999;
-            display: flex; justify-content: center; align-items: center;
-            transition: opacity 1.2s var(--ease-dramatic), visibility 1.2s;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #ffffff;
+            z-index: 99999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.88s var(--ease-silky), visibility 0.88s;
+            will-change: opacity;
         }
-        #page-loader.loaded { 
-            opacity: 0; visibility: hidden; pointer-events: none; 
-        }
-        
-        .loader-content { 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-            transition: transform 0.8s var(--ease-dramatic), opacity 0.8s ease;
-        }
-        #page-loader.loaded .loader-content {
-            transform: translateY(-20px);
+        #page-loader.loaded {
             opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
         }
-        
-        .loader-shape {
-            width: 24px; height: 24px; border: 1px solid var(--text-main);
-            /* 灵动的几何变形旋转动画 */
-            animation: morphShape 2s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+
+        .geo-loader-stage {
+            position: relative;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            will-change: transform, opacity;
         }
-        @keyframes morphShape {
-            0% { transform: rotate(0deg); border-radius: 0%; background-color: transparent; }
-            50% { transform: rotate(180deg) scale(0.5); border-radius: 50%; background-color: var(--text-main); }
-            100% { transform: rotate(360deg); border-radius: 0%; background-color: transparent; }
+
+        /* 左右两侧对称排布的极细垂直几何切片线 */
+        .geo-wing-slat {
+            width: 1.5px;
+            height: 44px;
+            background-color: var(--text-main);
+            transform-origin: top center;
+            transform: scaleY(0);
+            opacity: 0;
+            will-change: transform, opacity;
         }
-        
-        .loader-counter { 
-            font-family: var(--font-sans); font-size: 11px; font-weight: 400; 
-            letter-spacing: 4px; color: var(--text-main); margin-right: -4px;
+
+        /* 正中央可由 1.5px 细线丝滑展开为 1px 矩形取景框的几何核心 */
+        .geo-center-frame {
+            position: relative;
+            width: 1.5px;
+            height: 48px;
+            border: 1px solid var(--text-main);
+            background-color: rgba(10, 10, 10, 0.03);
+            transform-origin: top center;
+            transform: scaleY(0);
+            overflow: hidden;
+            will-change: width, transform, opacity;
+        }
+        .geo-center-inner {
+            position: absolute;
+            inset: 4px;
+            background: linear-gradient(135deg, rgba(10, 10, 10, 0.08) 0%, rgba(10, 10, 10, 0.01) 100%);
+            opacity: 0;
+            will-change: opacity, transform;
         }
 
         /* === 页面过渡动画遮罩 === */
@@ -97,7 +137,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background-color: var(--text-main); z-index: 8000;
             transform: translateY(100%); 
-            transition: transform 0.8s cubic-bezier(0.7, 0, 0.3, 1);
+            transition: transform 0.8s var(--ease-curtain);
         }
         #page-transition.active { transform: translateY(0); } 
         #page-transition.done { transform: translateY(-100%); } 
@@ -105,26 +145,37 @@
 
         /* === 桌面端自定义光标 === */
         @media (pointer: fine) {
-            body, a, button, img { cursor: none !important; }
+            body, a, button, img, canvas, .strip-slice, .grid-card { cursor: none !important; }
         }
         
         .cursor {
             position: fixed; top: 0; left: 0; width: 8px; height: 8px;
             background-color: var(--text-main); border-radius: 50%;
             pointer-events: none; z-index: 9999;
-            transform: translate(-50%, -50%);
-            transition: width 0.3s var(--ease-out), height 0.3s var(--ease-out), background-color 0.3s, border 0.3s;
-            display: none; 
+            transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
+            transition: width 0.32s var(--ease-silky), height 0.32s var(--ease-silky), background-color 0.28s, border 0.28s;
+            display: none;
+            align-items: center; justify-content: center;
+            will-change: transform, width, height;
+        }
+        .cursor-label {
+            font-family: var(--font-sans);
+            font-size: 8px;
+            font-weight: 500;
+            letter-spacing: 1.5px;
+            color: #ffffff;
+            opacity: 0;
+            transform: scale(0.6);
+            transition: opacity 0.2s ease, transform 0.26s var(--ease-silky);
+            white-space: nowrap;
         }
 
-        /* 普通交互元素悬浮状态 */
         .cursor.hovering {
             width: 45px; height: 45px;
             background-color: rgba(0, 0, 0, 0.05);
             border: 1px solid rgba(0, 0, 0, 0.2);
         }
         
-        /* 针对主图的反色悬浮状态 */
         .cursor.hovering-inverse {
             width: 65px; height: 65px;
             background-color: #ffffff;
@@ -132,13 +183,25 @@
             mix-blend-mode: difference;
         }
 
-        /* 触屏设备禁用光标 */
-        @media (pointer: coarse), (hover: none), (max-width: 768px) {
-            .cursor { display: none !important; }
-            body, a, button, img { cursor: auto !important; }
+        .cursor.hovering-strip {
+            width: 52px; height: 52px;
+            background-color: rgba(10, 10, 10, 0.84);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+        }
+        .cursor.hovering-strip .cursor-label {
+            opacity: 1;
+            transform: scale(1);
         }
 
-        /* === 顶栏导航 === */
+        @media (pointer: coarse), (hover: none), (max-width: 768px) {
+            .cursor { display: none !important; }
+            body, a, button, img, canvas, .strip-slice, .grid-card { cursor: auto !important; }
+        }
+
+        /* === 顶栏导航 (原版样式) === */
         .site-header {
             position: fixed; top: 0; left: 0; width: 100%;
             padding: 40px 6vw;
@@ -146,14 +209,14 @@
             z-index: 100;
             background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
             pointer-events: none; 
-            transition: background 0.4s var(--ease-out), backdrop-filter 0.4s var(--ease-out);
+            transition: background 0.4s var(--ease-silky), backdrop-filter 0.4s var(--ease-silky);
         }
         .header-logo, .header-nav, .menu-btn { pointer-events: auto; }
 
         .header-logo {
             font-family: var(--font-serif); font-size: 22px; font-weight: 700;
             color: var(--text-main); text-decoration: none; letter-spacing: 4px;
-            transition: opacity 0.4s var(--ease-out);
+            transition: opacity 0.4s var(--ease-silky);
         }
 
         .header-nav { display: flex; gap: 40px; align-items: center; }
@@ -171,19 +234,19 @@
             background: rgba(255,255,255,0); border: none; z-index: 101; 
             width: 44px; height: 44px; align-items: center; justify-content: center;
             border-radius: 50%;
-            transition: all 0.4s var(--ease-out);
+            transition: all 0.4s var(--ease-silky);
         }
         .menu-btn span {
             display: block; width: 24px; height: 1px; background-color: var(--text-main);
-            transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
+            transition: transform 0.4s var(--ease-silky), opacity 0.4s var(--ease-silky);
         }
 
         .view-section {
-            display: none; opacity: 0; transition: opacity 0.6s var(--ease-out);
+            display: none; opacity: 0; transition: opacity 0.6s var(--ease-silky);
         }
         .view-section.active { display: block; opacity: 1; }
 
-        /* === 首页：主视觉区 === */
+        /* === 首页：主视觉区 (与加载器完成无缝衔接) === */
         .hero-section {
             height: 100vh; width: 100vw;
             display: flex; align-items: center; justify-content: center;
@@ -198,39 +261,42 @@
         .hero-meta {
             font-family: var(--font-sans); font-size: 10px; font-weight: 300;
             letter-spacing: 4px; color: var(--text-sub);
-            writing-mode: vertical-rl; transform: rotate(180deg);
+            writing-mode: vertical-rl; transform: rotate(180deg) translateY(-10px);
             display: flex; align-items: center; gap: 20px;
+            opacity: 0;
+            transition: opacity 1.1s var(--ease-silky) 0.1s, transform 1.1s var(--ease-silky) 0.1s;
         }
-        .hero-meta.right { transform: none; }
+        .hero-meta.right { transform: translateY(10px); }
+        body.site-ready .hero-meta { opacity: 1; transform: rotate(180deg) translateY(0); }
+        body.site-ready .hero-meta.right { opacity: 1; transform: translateY(0); }
         .hero-meta .line { width: 1px; height: 50px; background-color: var(--border-color); }
 
         .hero-image-wrapper {
             display: flex; justify-content: center; align-items: center;
             max-width: 45vw; height: 65vh; 
             position: relative;
-            cursor: none;
         }
 
-        /* 主基础图，去除固定黑白滤镜，改为由原图色彩展现 */
         .hero-main {
             width: auto; height: auto; 
             max-width: 100%; max-height: 100%;
             object-fit: contain; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.12);
-            animation: heroReveal 2.5s var(--ease-gentle);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.10);
+            transform: scale(1.028) translateY(14px);
+            opacity: 0;
+            transition: transform 1.45s var(--ease-silky), opacity 1.2s var(--ease-silky);
+        }
+        body.site-ready .hero-main {
+            transform: scale(1) translateY(0);
+            opacity: 1;
         }
 
-        @keyframes heroReveal {
-            0% { transform: scale(1.05) translateY(30px); opacity: 0; filter: grayscale(100%) blur(15px); }
-            100% { transform: scale(1) translateY(0); opacity: 1; filter: grayscale(0%) blur(0); }
-        }
-
-        /* 极简滚动图标 */
         .scroll-icon {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            width: 24px; height: 24px; color: var(--text-sub);
+            width: 28px; height: 28px; color: var(--text-sub);
             animation: floatScroll 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            opacity: 0.6; display: flex; justify-content: center;
+            opacity: 0.6; display: flex; align-items: center; justify-content: center;
+            background: none; border: none;
         }
         .scroll-icon svg { width: 16px; height: 16px; }
 
@@ -239,138 +305,674 @@
             50% { transform: translate(-50%, 8px); opacity: 0.8; }
         }
 
-        /* === 策展式交错列表排版 === */
-        .gallery-container { 
-            max-width: 1500px; margin: 0 auto; padding: 100px 6vw 150px; 
-        }
-        
-        .gallery-list { 
-            display: flex; flex-direction: column; gap: 18vh; 
-        }
-        
-        .gallery-item.row-layout {
-            display: flex; align-items: center; justify-content: space-between; gap: 8vw;
-            cursor: none;
-        }
-        .gallery-item.row-layout.reverse { flex-direction: row-reverse; }
-        
-        .row-img-wrap {
-            width: 58%; position: relative; overflow: hidden;
-            opacity: 0; transform: translateY(60px);
-            transition: opacity 1.2s var(--ease-gentle), transform 1.2s var(--ease-gentle);
-        }
-        .gallery-item.row-layout.visible .row-img-wrap { opacity: 1; transform: translateY(0); }
-        
-        .row-img-wrap img {
-            width: 100%; display: block; object-fit: cover; aspect-ratio: 4/3; 
-            filter: grayscale(15%); transform: scale(1.05);
-            transition: transform 1.5s var(--ease-gentle), filter 0.8s ease;
-        }
-        .gallery-item.row-layout:hover .row-img-wrap img { transform: scale(1); filter: grayscale(0%); }
-        
-        .row-info {
-            width: 35%; display: flex; flex-direction: column;
-            opacity: 0; transform: translateY(30px);
-            transition: opacity 1s 0.2s var(--ease-gentle), transform 1s 0.2s var(--ease-gentle);
-        }
-        .gallery-item.row-layout.visible .row-info { opacity: 1; transform: translateY(0); }
-        
-        .row-num {
-            font-family: var(--font-serif); font-size: 12px; color: var(--text-sub);
-            margin-bottom: 30px; display: flex; align-items: center; gap: 20px;
-        }
-        .row-num::after { content: ''; width: 40px; height: 1px; background: var(--border-color); }
-        
-        .row-title {
-            font-family: var(--font-serif); font-size: 2vw; line-height: 1.4;
-            font-weight: 400; color: var(--text-main); margin-bottom: 20px; 
-        }
-        .row-title span { 
-            font-family: var(--font-sans); display: block; font-size: 11px; 
-            letter-spacing: 2px; color: var(--text-sub); margin-top: 10px; text-transform: uppercase;
-        }
-        
-        .row-meta { 
-            font-family: var(--font-sans); font-size: 10px; letter-spacing: 3px; 
-            color: var(--text-main); text-transform: uppercase; 
+        /* =========================================================
+           底部画廊区：1:1 还原截图的「顶部平齐 · 由中间向两侧阶梯垂落扩散」载入动画
+           + 临界阻尼零顿挫的「选中图片滑入中心」动效
+        ========================================================= */
+        .archive-showcase-section {
+            position: relative;
+            width: 100vw;
+            min-height: 92vh;
+            padding: 80px 0 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: var(--bg-color);
+            overflow: hidden;
         }
 
-        /* === 沉浸式组图排版模态框 (Project Modal) === */
+        /* 顶部轻量控制栏 */
+        .showcase-toolbar {
+            width: 100%;
+            padding: 0 6vw;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 0.85s 1.15s var(--ease-silky), transform 0.85s 1.15s var(--ease-silky);
+        }
+        .archive-showcase-section.entered .showcase-toolbar {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .series-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .series-pill {
+            background: none;
+            border: none;
+            font-family: var(--font-sans);
+            font-size: 10px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            padding: 6px 0;
+            position: relative;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .series-pill .pill-num {
+            font-size: 8px;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+        .series-pill::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 1px;
+            background-color: var(--text-main);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s var(--ease-silky);
+        }
+        .series-pill:hover,
+        .series-pill.active {
+            color: var(--text-main);
+            font-weight: 500;
+        }
+        .series-pill.active .pill-num {
+            color: var(--text-main);
+        }
+        .series-pill.active::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .view-mode-switch {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid var(--border-color);
+            padding: 5px 14px;
+            border-radius: 999px;
+        }
+        .mode-btn {
+            background: none;
+            border: none;
+            font-family: var(--font-sans);
+            font-size: 9px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            padding: 3px 6px;
+            transition: color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-btn.active {
+            color: var(--text-main);
+        }
+        .mode-btn-icon {
+            display: inline-flex;
+            gap: 2px;
+            align-items: center;
+            height: 10px;
+        }
+        .mode-btn-icon i {
+            display: block;
+            width: 1.5px;
+            height: 10px;
+            background: currentColor;
+        }
+        .mode-btn-icon.strip-icon i:nth-child(2) { width: 4px; }
+        .mode-btn-icon.grid-icon {
+            display: grid;
+            grid-template-columns: repeat(2, 4px);
+            gap: 2px;
+            height: 10px;
+        }
+        .mode-btn-icon.grid-icon i {
+            width: 4px; height: 4px;
+        }
+        .mode-divider {
+            width: 1px; height: 10px; background: var(--border-color);
+        }
+
+        /* === 核心：零顿挫连续权重 Flexbox 流光切片带 === */
+        .kinetic-strip-stage {
+            position: relative;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: auto 0;
+        }
+
+        .kinetic-strip-Wrapper {
+            position: relative;
+            width: 100vw;
+            height: clamp(350px, 48vh, 520px);
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 0;
+            padding: 0;
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .strip-slice {
+            position: relative;
+            height: 100%;
+            flex: 0 1 0%;
+            min-width: 0;
+            margin: 0 1px;
+            overflow: hidden;
+            background-color: #efefef;
+            will-change: flex-grow, clip-path;
+            /* 初始未触发前完全向上收起 (顶部对齐，底部裁切 100%) */
+            clip-path: inset(0% 0% 100% 0%);
+        }
+
+        .strip-slice-inner {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 默认高对比黑白，中心主图、被点击滑向中心的目标图与鼠标悬浮切片平滑过渡为彩色
+           注意：去除 hover 与 focused 之间的 scale 突变，使动画结束瞬间 0 跳动！ */
+        .strip-slice .slice-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 50% 50%;
+            display: block;
+            pointer-events: none;
+            filter: grayscale(100%) contrast(1.06);
+            transform: scale(1.015);
+            transition: filter 0.65s var(--ease-silky), transform 0.85s var(--ease-silky);
+        }
+
+        /* 正中间放大主图 & 正在滑向中心的选中图片：100% 鲜明彩色 */
+        .strip-slice.is-focused .slice-media {
+            filter: grayscale(0%) contrast(1);
+            transform: scale(1);
+        }
+
+        /* 鼠标悬浮在任意黑白切片上：纯 CSS 驱动平稳变成彩色，不触发任何结束态切换跳动 */
+        .strip-slice:hover .slice-media {
+            filter: grayscale(0%) contrast(1.01);
+        }
+
+        /* === 底部图注区（在切片扩散完成后浮现 + 丝滑翻牌切换） === */
+        .strip-caption-area {
+            position: relative;
+            width: 100%;
+            min-height: 92px;
+            margin-top: 22px;
+            padding: 0 6vw;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.85s 1.25s var(--ease-silky), transform 0.85s 1.25s var(--ease-silky);
+        }
+        .archive-showcase-section.entered .strip-caption-area {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .strip-caption-center {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .caption-meta-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 20px;
+            font-family: var(--font-sans);
+            font-size: 10px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            height: 15px;
+            overflow: hidden;
+        }
+        .caption-meta-row .meta-index {
+            font-size: 9px;
+            color: var(--text-main);
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+        .meta-roll-item {
+            display: inline-block;
+            transition: transform 0.55s var(--ease-silky), opacity 0.42s var(--ease-silky);
+        }
+        .meta-roll-item.rolling-out {
+            transform: translateY(-108%);
+            opacity: 0;
+        }
+        .meta-roll-item.rolling-in {
+            transform: translateY(108%);
+            opacity: 0;
+            transition: none;
+        }
+
+        .caption-title-wrap {
+            height: 48px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .caption-main-title {
+            font-family: var(--font-editorial);
+            font-size: clamp(28px, 3.1vw, 42px);
+            font-weight: 300;
+            line-height: 1.15;
+            color: var(--text-main);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 14px;
+            transition: transform 0.58s var(--ease-silky), opacity 0.45s var(--ease-silky);
+        }
+        .caption-main-title.rolling-out {
+            transform: translateY(-105%);
+            opacity: 0;
+        }
+        .caption-main-title.rolling-in {
+            transform: translateY(105%);
+            opacity: 0;
+            transition: none;
+        }
+        .caption-main-title .cn-title {
+            font-family: 'Noto Serif SC', serif;
+            font-size: clamp(17px, 1.7vw, 24px);
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: var(--text-sub);
+        }
+        .caption-main-title .en-title {
+            font-family: var(--font-editorial);
+            color: var(--text-main);
+            font-size: clamp(28px, 3.1vw, 42px);
+        }
+
+        .strip-controls-right {
+            grid-column: 3;
+            justify-self: end;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .strip-hint-text {
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .strip-nav-arrows {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .strip-arrow-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--ease-silky);
+        }
+        .strip-arrow-btn:hover {
+            border-color: var(--text-main);
+            background: var(--text-main);
+            color: #ffffff;
+            transform: scale(1.06);
+        }
+        .strip-arrow-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* =========================================================
+           模式二：真实宽高比瀑布流画廊 (Index Grid，严格按图片实际宽高比显示)
+        ========================================================= */
+        .contact-grid-stage {
+            display: none;
+            width: 100%;
+            padding: 10px 6vw 60px;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.55s var(--ease-silky), transform 0.55s var(--ease-silky);
+        }
+        .contact-grid-stage.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .contact-sheet-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 28px;
+            align-items: start;
+        }
+        .masonry-col {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .grid-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            opacity: 0;
+            transform: translate3d(var(--slide-from-x, 0px), 22px, 0);
+            transition: opacity 0.68s var(--ease-silky), transform 0.68s var(--ease-silky);
+        }
+        .grid-card.visible {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+        }
+
+        .grid-card-img-box {
+            position: relative;
+            width: 100%;
+            height: auto;
+            overflow: hidden;
+            background: #f6f6f6;
+            line-height: 0;
+        }
+        .grid-card-img-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.72s var(--ease-silky);
+        }
+        .grid-card:hover .grid-card-img-box img {
+            transform: scale(1.035);
+        }
+
+        .grid-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            line-height: 1.4;
+        }
+        .grid-card-meta .card-idx {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        /* =========================================================
+           沉浸式组图检视模态框：共享几何 FLIP 丝滑展开 + 顶底栏协同入场
+        ========================================================= */
         .detail-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff; z-index: 2000; 
-            opacity: 0; transition: opacity 0.6s ease;
-            overflow-y: auto; color: var(--text-main); 
-            -ms-overflow-style: none; scrollbar-width: none;
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.62s var(--ease-silky);
+            overflow-y: auto;
+            color: var(--text-main);
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
         .detail-modal::-webkit-scrollbar { display: none; }
-        .detail-modal.show { display: block; opacity: 1; }
+        .detail-modal.show { opacity: 1; }
 
         .detail-content-wrapper {
-            display: flex; flex-direction: column; min-height: 100vh; padding: 120px 5vw 150px;
-            max-width: 1000px; margin: 0 auto; align-items: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 100vh;
+            padding: 36px 6vw 36px;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        .detail-header { text-align: center; margin-bottom: 60px; max-width: 800px; width: 100%; }
-        .detail-header h2 { font-family: var(--font-serif); font-size: 38px; line-height: 1.4; margin-bottom: 20px; color: var(--text-main); letter-spacing: 2px; }
-        .detail-meta { font-size: 11px; letter-spacing: 4px; color: var(--text-sub); text-transform: uppercase; }
+        .detail-header-block {
+            opacity: 0;
+            transform: translateY(-14px);
+            transition: opacity 0.58s var(--ease-silky) 0.08s, transform 0.65s var(--ease-silky) 0.08s;
+        }
+        .detail-modal.show .detail-header-block {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-        .detail-text-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 4vw;
-            margin-bottom: 120px; max-width: 900px; width: 100%;
+        .detail-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 110px;
         }
-        .detail-story-col { font-size: 13px; font-weight: 300; line-height: 2.4; color: #666666; text-align: justify; }
+        .detail-title-group {
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .detail-header-badge {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            text-transform: uppercase;
+        }
+        .detail-top-bar h2 {
+            font-family: var(--font-serif);
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+        .detail-meta {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
 
-        .detail-images {
-            display: grid; grid-template-columns: repeat(12, 1fr); 
-            gap: 4vw 2vw; width: 100%; align-items: start;
+        .story-toggle-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 5px 14px;
+            font-family: var(--font-sans);
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            transition: all 0.3s var(--ease-silky);
         }
-        .detail-images img {
-            width: 100%; height: auto; object-fit: cover; display: block;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            opacity: 0; transform: translateY(40px); 
-            transition: opacity 1.5s var(--ease-gentle), transform 1.5s var(--ease-gentle);
+        .story-toggle-btn:hover, .story-toggle-btn.active {
+            border-color: var(--text-main);
+            color: var(--text-main);
         }
-        .detail-images img:nth-child(1) { grid-column: 1 / 13; margin-bottom: 2vw; }
-        .detail-images img:nth-child(n+2) { grid-column: span 6; }
-        .detail-images img.loaded { opacity: 1; transform: translateY(0); }
+
+        .detail-story-drawer {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.52s var(--ease-silky), opacity 0.42s var(--ease-silky), margin 0.42s var(--ease-silky);
+            max-width: 780px;
+        }
+        .detail-story-drawer.open {
+            max-height: 160px;
+            opacity: 1;
+            margin-top: 16px;
+        }
+        .detail-story-drawer p {
+            font-size: 12px;
+            font-weight: 300;
+            line-height: 2;
+            color: #666;
+        }
+
+        .detail-stage-area {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            min-height: 56vh;
+        }
+        .detail-stage-img {
+            max-width: 86vw;
+            max-height: 64vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            box-shadow: 0 28px 68px rgba(0, 0, 0, 0.08);
+            transform-origin: center center;
+            will-change: transform, opacity;
+            transition: transform 0.72s var(--ease-silky), opacity 0.52s var(--ease-silky), box-shadow 0.72s var(--ease-silky);
+        }
+        .detail-stage-img.switching {
+            opacity: 0;
+            transform: scale(0.975) translateY(8px);
+            transition: transform 0.28s var(--ease-silky), opacity 0.24s ease;
+        }
+
+        .detail-filmstrip-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(16px);
+            transition: opacity 0.58s var(--ease-silky) 0.12s, transform 0.65s var(--ease-silky) 0.12s;
+        }
+        .detail-modal.show .detail-filmstrip-bar {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .detail-filmstrip-counter {
+            font-size: 9px;
+            letter-spacing: 3px;
+            color: var(--text-sub);
+            text-transform: uppercase;
+        }
+        .detail-filmstrip-track {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            max-width: 100%;
+            overflow-x: auto;
+            padding: 6px 10px;
+        }
+        .filmstrip-thumb {
+            height: 68px;
+            width: auto;
+            overflow: hidden;
+            opacity: 0.45;
+            filter: grayscale(100%);
+            transition: opacity 0.38s var(--ease-silky), filter 0.38s var(--ease-silky), transform 0.38s var(--ease-silky);
+            flex-shrink: 0;
+            border: 1px solid transparent;
+        }
+        .filmstrip-thumb img {
+            height: 100%;
+            width: auto;
+            display: block;
+        }
+        .filmstrip-thumb:hover {
+            opacity: 0.85;
+            filter: grayscale(0%);
+        }
+        .filmstrip-thumb.active {
+            opacity: 1;
+            filter: grayscale(0%);
+            border-color: var(--text-main);
+            transform: translateY(-3px);
+        }
 
         /* === 悬浮关闭按钮 === */
         .minimal-close-btn {
-            position: fixed; top: 40px; right: 5vw;
+            position: fixed; top: 32px; right: 5vw;
             display: flex; align-items: center; gap: 12px;
             background: none; border: none; z-index: 2010;
-            color: #1ba9c6; mix-blend-mode: difference; padding: 10px;
+            color: var(--text-main); padding: 8px;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity 0.52s var(--ease-silky) 0.1s, transform 0.52s var(--ease-silky) 0.1s;
+        }
+        .detail-modal.show .minimal-close-btn,
+        .zoom-modal.show .minimal-close-btn {
+            opacity: 1;
+            transform: translateY(0);
         }
         .minimal-close-btn .close-text {
-            font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: transform 0.4s var(--ease-out), opacity 0.4s var(--ease-out);
+            font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: transform 0.35s var(--ease-silky), opacity 0.35s var(--ease-silky);
         }
         .minimal-close-btn .close-icon {
-            position: relative; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4); display: flex; justify-content: center; align-items: center; transition: all 0.4s var(--ease-out);
+            position: relative; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(10, 10, 10, 0.22); display: flex; justify-content: center; align-items: center; transition: all 0.35s var(--ease-silky);
         }
         .minimal-close-btn .close-icon::before, .minimal-close-btn .close-icon::after {
-            content: ''; position: absolute; width: 14px; height: 1px; background-color: #ffffff; transition: transform 0.4s var(--ease-out);
+            content: ''; position: absolute; width: 14px; height: 1px; background-color: var(--text-main); transition: transform 0.35s var(--ease-silky);
         }
         .minimal-close-btn .close-icon::before { transform: rotate(45deg); }
         .minimal-close-btn .close-icon::after { transform: rotate(-45deg); }
-        .minimal-close-btn:hover .close-icon { transform: rotate(90deg) scale(1.05); border-color: #ffffff; }
+        .minimal-close-btn:hover .close-icon { transform: rotate(90deg) scale(1.06); border-color: var(--text-main); }
         .minimal-close-btn:hover .close-text { transform: translateX(-5px); opacity: 0.6; }
 
         /* === 单图极致放大模态框 === */
         .zoom-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.98); z-index: 3000;
-            justify-content: center; align-items: center; opacity: 0; transition: opacity 0.6s ease;
+            display: none; position: fixed; inset: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            z-index: 3000;
+            justify-content: center; align-items: center; opacity: 0;
+            transition: opacity 0.58s var(--ease-silky);
         }
         .zoom-modal.show { display: flex; opacity: 1; }
         .zoom-modal img {
-            max-width: 90vw; max-height: 90vh; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-            transform: scale(0.95); opacity: 0; transition: transform 0.8s var(--ease-gentle), opacity 0.6s ease;
+            max-width: 92vw; max-height: 92vh; object-fit: contain;
+            box-shadow: 0 28px 72px rgba(0,0,0,0.08);
+            transform: scale(0.92);
+            opacity: 0;
+            transition: transform 0.68s var(--ease-silky), opacity 0.52s var(--ease-silky);
         }
         .zoom-modal.show img { transform: scale(1); opacity: 1; }
-        .zoom-modal.show img.updating {
-            transform: scale(0.98); opacity: 0; transition: transform 0.25s ease, opacity 0.25s ease;
-        }
 
         /* === 关于页面 === */
         .about-section { min-height: 100vh; padding: 150px 8vw 100px; display: flex; align-items: center; }
@@ -395,7 +997,9 @@
         .site-footer a { color: var(--text-sub); text-decoration: none; transition: color 0.3s ease; }
         .site-footer a:hover { color: var(--text-main); }
 
-        /* === 移动端适配 === */
+        /* =========================================================
+           移动端适配：移动端仅使用 Index Grid 展示，且保持每张图片真实宽高比
+        ========================================================= */
         @media (max-width: 768px) {
             .site-header { padding: 25px 5vw; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
             .menu-btn { display: flex; }
@@ -427,31 +1031,55 @@
             .hero-meta { display: none; } 
             .hero-image-wrapper { max-width: 85vw; height: 50vh; }
 
-            .loader-shape { width: 20px; height: 20px; }
-            .loader-counter { font-size: 10px; }
-
-            .gallery-item.row-layout, .gallery-item.row-layout.reverse { 
-                flex-direction: column; gap: 30px; align-items: flex-start; 
+            .archive-showcase-section {
+                min-height: auto;
+                padding: 40px 0 60px;
             }
-            .row-img-wrap { width: 100%; }
-            .row-info { width: 100%; padding: 0; }
-            .row-title { font-size: 24px; margin-bottom: 15px; }
-            .row-num { margin-bottom: 20px; }
-            .gallery-list { gap: 10vh; }
-            .gallery-container { padding-top: 50px; }
+
+            .showcase-toolbar {
+                padding: 0 5vw;
+                margin-bottom: 18px;
+                opacity: 1;
+                transform: none;
+                transition: none;
+            }
+            .series-filter-bar {
+                gap: 16px;
+                overflow-x: auto;
+                width: 100%;
+                flex-wrap: nowrap;
+                padding-bottom: 4px;
+            }
+            .series-pill { flex-shrink: 0; }
+
+            /* 移动端仅使用 Index Grid 效果展示，且严格保留图片原宽高比 */
+            .view-mode-switch {
+                display: none !important;
+            }
+            .kinetic-strip-stage {
+                display: none !important;
+            }
+            .contact-grid-stage {
+                display: block !important;
+                opacity: 1 !important;
+                transform: none !important;
+                padding: 10px 5vw 40px;
+            }
+            .contact-sheet-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+            .masonry-col {
+                gap: 20px;
+            }
 
             .about-grid { grid-template-columns: 1fr; gap: 40px; }
             .about-portrait { height: 50vh; }
             .achievements { grid-template-columns: 1fr; }
 
-            .detail-content-wrapper { padding: 80px 5vw 100px; }
-            .detail-header h2 { font-size: 26px; }
-            .detail-text-grid { grid-template-columns: 1fr; gap: 20px; margin-bottom: 60px; }
-            
-            .detail-images { display: flex; flex-direction: column; gap: 30px; }
-            .detail-images img { width: 100% !important; margin: 0 !important; }
-            
-            .zoom-modal img { max-width: 100vw; max-height: 100vh; }
+            .detail-content-wrapper { padding: 75px 5vw 30px; }
+            .detail-top-bar { padding-right: 0; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .detail-stage-img { max-width: 92vw; max-height: 52vh; }
 
             .site-footer { flex-direction: column; gap: 15px; padding: 30px 5vw; text-align: center; }
         }
@@ -459,21 +1087,30 @@
 </head>
 <body>
 
-    <!-- 简约白色灵动 Loading 动画 -->
-    <div id="page-loader">
-        <div class="loader-content">
-            <div class="loader-shape"></div>
-            <div class="loader-counter" id="loader-counter">0%</div>
+    <!-- 极简建筑画框与切片流光加载动画 (零文字，契合全站「中心画框 + 两侧垂直切片」的设计语言) -->
+    <div id="page-loader" aria-hidden="true">
+        <div class="geo-loader-stage" id="geo-loader-stage">
+            <span class="geo-wing-slat" data-dist="4"></span>
+            <span class="geo-wing-slat" data-dist="3"></span>
+            <span class="geo-wing-slat" data-dist="2"></span>
+            <span class="geo-wing-slat" data-dist="1"></span>
+            <div class="geo-center-frame" id="geo-center-frame">
+                <div class="geo-center-inner" id="geo-center-inner"></div>
+            </div>
+            <span class="geo-wing-slat" data-dist="1"></span>
+            <span class="geo-wing-slat" data-dist="2"></span>
+            <span class="geo-wing-slat" data-dist="3"></span>
+            <span class="geo-wing-slat" data-dist="4"></span>
         </div>
     </div>
 
     <div id="page-transition"></div>
-    <div class="cursor" id="cursor"></div>
+    <div class="cursor" id="cursor"><span class="cursor-label" id="cursor-label">OPEN</span></div>
 
     <header class="site-header" id="site-header">
         <a href="#" class="header-logo" onclick="switchView('works')">XIANG</a>
         
-        <button class="menu-btn" id="menu-btn">
+        <button class="menu-btn" id="menu-btn" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
 
@@ -488,7 +1125,7 @@
 
     <main>
         <div id="works" class="view-section active">
-            <!-- -->
+            <!-- 首屏主视觉区 -->
             <section class="hero-section">
                 <div class="hero-layout">
                     <div class="hero-meta left">
@@ -496,8 +1133,7 @@
                     </div>
                     
                     <div class="hero-image-wrapper" id="hero-wrapper">
-                        <!-- 现改为单张主图，结合光标的反相效果完成全新交互 -->
-                        <img id="hero-img-main" class="hero-main" src="" alt="Hero Featured Work">
+                        <img id="hero-img-main" class="hero-main" src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2-2.jpg" alt="Hero Featured Work">
                     </div>
 
                     <div class="hero-meta right">
@@ -505,83 +1141,99 @@
                     </div>
                 </div>
                 
-                <div class="scroll-icon">
+                <button class="scroll-icon" id="scroll-to-archive" aria-label="Scroll to archive">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="3" x2="12" y2="21"></line>
                         <polyline points="6 15 12 21 18 15"></polyline>
                     </svg>
-                </div>
+                </button>
             </section>
 
-            <section class="gallery-container">
-                <div class="gallery-list" id="gallery-grid">
-                    
-                    <div class="gallery-item row-layout" 
-                         data-title="灰度架构 / Grayscale Architecture" 
-                         data-meta="2023 / DALIAN"
-                         data-story="黑与白的极致对撞，抽离色彩的喧嚣，让光影成为建筑的骨血，线条成为空间的诗行。每一格画面，都是对城市肌理最克制的艺术解构。|在灰度的层次里，建筑的轮廓与城市的呼吸悄然共振。摒弃浮华的修饰，黑白镜头定格的，是空间最本真的力量，与城市静默的灵魂。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0657.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0280.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg">
-                        <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg" alt="Grayscale Architecture"></div>
-                        <div class="row-info">
-                            <span class="row-num">01</span><h3 class="row-title">灰度架构<span>Grayscale Architecture</span></h3><span class="row-meta">2023 / DALIAN</span>
-                        </div>
-                    </div>
-                    
-                    <div class="gallery-item row-layout reverse"
-                         data-title="色彩的温度 / The Temperature of Color" 
-                         data-meta="2021 / BEIJING"
-                         data-story="色彩不仅是视觉的表象，更是情绪的显影，从落日的余晖到几何的浓烈碰撞，色调定义了瞬间的温度。|镜头捕捉光色交织的叙事，在冷暖对比的纯粹视觉中，定格最直观的感官记忆。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_3550.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1387.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/20241123-_L5A7867_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0355.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0325.jpg">
-                        <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg" alt="The Temperature of Color"></div>
-                        <div class="row-info">
-                            <span class="row-num">02</span><h3 class="row-title">色彩的温度<span>The Temperature of Color</span></h3><span class="row-meta">2021 / BEIJING</span>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item row-layout"
-                         data-title="几何与留白 / Geometry and Negative Space" 
-                         data-meta="2022 / BEIJNG"
-                         data-story="剥离多余的喧嚣，取景框内只留下纯粹的几何与线条。|摄影是一场做减法的艺术，在极致的留白与锋利的切割间，重构空间的绝对理性与平静。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/2ABA18B3-761A-4B6C-BF2A-B79CEB33B064_1_102_o.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_3545.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0072.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_1367.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0063.jpg">
-                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg" alt="Geometry and Negative Space"></div>
-                        <div class="row-info">
-                            <span class="row-num">03</span><h3 class="row-title">几何与留白<span>Geometry and Negative Space</span></h3><span class="row-meta">2022 / BEIJING</span>
-                        </div>
+            <!-- =======================================================
+                 底部画廊：1:1 复刻截图的「由中间向两侧倒 V 阶梯垂落扩散」载入动效 + 默认 IMG_0635.jpg 居中
+            ======================================================= -->
+            <section class="archive-showcase-section" id="archive-section">
+                <!-- 顶部系列快速筛选与视图切换 -->
+                <div class="showcase-toolbar">
+                    <div class="series-filter-bar" id="series-filter-bar">
+                        <button class="series-pill active" data-series="all">
+                            <span class="pill-num">ALL</span><span>ARCHIVE</span>
+                        </button>
+                        <button class="series-pill" data-series="0">
+                            <span class="pill-num">01</span><span>色彩温度</span>
+                        </button>
+                        <button class="series-pill" data-series="1">
+                            <span class="pill-num">02</span><span>天际轮廓</span>
+                        </button>
+                        <button class="series-pill" data-series="2">
+                            <span class="pill-num">03</span><span>仰望刻度</span>
+                        </button>
+                        <button class="series-pill" data-series="3">
+                            <span class="pill-num">04</span><span>空濛之境</span>
+                        </button>
+                        <button class="series-pill" data-series="4">
+                            <span class="pill-num">05</span><span>几何留白</span>
+                        </button>
+                        <button class="series-pill" data-series="5">
+                            <span class="pill-num">06</span><span>灰度架构</span>
+                        </button>
                     </div>
 
-                    <div class="gallery-item row-layout reverse"
-                         data-title="仰望的刻度 / The Scale of Time" 
-                         data-meta="2023 / DALIAN"
-                         data-story="云的形态是时间的具象化，远处的白云如同静止的雪山，暗沉的积云则像海浪般汹涌，站在大连的海岸线上看着它们聚拢又消散，摄影的意义或许就是把这种转瞬即逝的宏大折叠进一张二维的图像里成为永恒。|站在大连的海岸线上，透过取景框看着它们在无尽的蓝中聚拢又消散，仿佛能体会到气流与天空交锋的瞬息万变，摄影的意义或许不仅仅是按下快门的本能，更是试图把这种转瞬即逝的宏大与敬畏小心翼翼地折叠进一张二维的图像里，让那些原本会被时间带走的瞬间，最终凝固成纯粹且永恒的视觉张力。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0431.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0679.jpg">
-                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg" alt="The Scale of Time"></div>
-                        <div class="row-info">
-                            <span class="row-num">04</span><h3 class="row-title">仰望的刻度<span>The Scale of Time</span></h3><span class="row-meta">2023 / DALIAN</span>
+                    <div class="view-mode-switch">
+                        <button class="mode-btn active" id="btn-mode-strip" data-mode="strip">
+                            <span class="mode-btn-icon strip-icon"><i></i><i></i><i></i></span>
+                            <span>KINETIC STRIP</span>
+                        </button>
+                        <span class="mode-divider"></span>
+                        <button class="mode-btn" id="btn-mode-grid" data-mode="grid">
+                            <span class="mode-btn-icon grid-icon"><i></i><i></i><i></i><i></i></span>
+                            <span>INDEX GRID</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 视图 1：参考 Redot.fr 的流光切片画廊 -->
+                <div class="kinetic-strip-stage" id="kinetic-strip-stage">
+                    <div class="kinetic-strip-Wrapper" id="kinetic-strip"></div>
+
+                    <div class="strip-caption-area">
+                        <div class="strip-caption-center" id="strip-caption-center">
+                            <div class="caption-meta-row">
+                                <span class="meta-index meta-roll-item" id="cap-index">04—33</span>
+                                <span class="meta-roll-item" id="cap-location">BEIJING</span>
+                                <span class="meta-roll-item" id="cap-year">2021</span>
+                            </div>
+                            <div class="caption-title-wrap">
+                                <h3 class="caption-main-title" id="cap-title">
+                                    <span class="en-title" id="cap-en">Chromatics</span>
+                                    <span class="cn-title" id="cap-cn">色彩的温度</span>
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="strip-controls-right">
+                            <span class="strip-hint-text">HOVER COLOR · CLICK TO CENTER · DRAG</span>
+                            <div class="strip-nav-arrows">
+                                <button class="strip-arrow-btn" id="strip-prev" aria-label="Previous Frame">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                                        <polyline points="12 19 5 12 12 5"></polyline>
+                                    </svg>
+                                </button>
+                                <button class="strip-arrow-btn" id="strip-next" aria-label="Next Frame">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="gallery-item row-layout"
-                         data-title="空濛之境 / The Hazy Realm" 
-                         data-meta="2023 / DALIAN"
-                         data-story="雾霭漫过水面与天际，把世界揉成一片柔软的灰蓝。桥与岛在朦胧里若隐若现，所有喧嚣都沉在雾里，只剩呼吸与光影的温柔共振。|天地被雾色晕染成淡墨长卷，轮廓消隐，边界模糊。在这半明半暗的留白里，我们与世界温柔对视，听见寂静里的回响。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/3170035~2_Original.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_1459.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/6.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_2067.jpg">
-                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG" alt="The Hazy Realm"></div>
-                        <div class="row-info">
-                            <span class="row-num">05</span><h3 class="row-title">空濛之境<span>The Hazy Realm</span></h3><span class="row-meta">2023 / DALIAN</span>
-                        </div>
-                    </div>
-
-                    <div class="gallery-item row-layout reverse"
-                         data-title="天际轮廓 / Skyline Contours" 
-                         data-meta="2023 / DALIAN"
-                         data-story="当视线越过山脊，城市的建筑肌理在晨昏的薄雾中安静地舒展。|沿着山海的交界线俯瞰，用镜头丈量天际的起伏，定格这座城市最宏大的静谧。"
-                         data-images="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0491.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0249.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_4272.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_9589.jpg,https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0568.jpg">
-                         <div class="row-img-wrap"><img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg" alt="Skyline Contours"></div>
-                        <div class="row-info">
-                            <span class="row-num">06</span><h3 class="row-title">天际轮廓<span>Skyline Contours</span></h3><span class="row-meta">2023 / DALIAN</span>
-                        </div>
-                    </div>
-
+                <!-- 视图 2：严格按照图片实际宽高比显示的瀑布流 Index Grid -->
+                <div class="contact-grid-stage" id="contact-grid-stage">
+                    <div class="contact-sheet-grid" id="contact-sheet-grid"></div>
                 </div>
             </section>
         </div>
@@ -590,7 +1242,7 @@
             <section class="about-section">
                 <div class="about-grid">
                     <div class="about-image-wrapper">
-                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/b83c4a6b1d8e16bd4a59ae98b87ba48c.JPG" alt="XIANG Portrait" class="about-portrait">
+                        <img src="https://cllli.oss-cn-beijing.aliyuncs.com/img/b83c4a6b1d8e16bd4a59ae98b87ba48c.JPG" alt="XIANG Portrait" class="about-portrait" loading="lazy">
                     </div>
                     <div class="about-content">
                         <span class="label">IDENTITY / DALIAN</span>
@@ -614,19 +1266,39 @@
         <div class="footer-right">DESIGNED & PHOTOGRAPHED BY XIANG</div>
     </footer>
 
-    <!-- 模态框 HTML 结构保持原样 -->
+    <!-- 沉浸式组图模态框：共享几何 FLIP 丝滑展开 + 底部同组等高胶片流 -->
     <div class="detail-modal" id="detail-modal">
         <button class="minimal-close-btn" id="modal-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <div class="detail-content-wrapper">
-            <div class="detail-header"><h2 id="detail-title">Project Title</h2><div class="detail-meta" id="detail-meta">Date / Location</div></div>
-            <div class="detail-text-grid"><div class="detail-story-col" id="detail-story-1"></div><div class="detail-story-col" id="detail-story-2"></div></div>
-            <div class="detail-images" id="detail-images"></div>
+            <div class="detail-header-block">
+                <div class="detail-top-bar">
+                    <div class="detail-title-group">
+                        <span class="detail-header-badge" id="detail-badge">SERIES 01</span>
+                        <h2 id="detail-title">Project Title</h2>
+                        <span class="detail-meta" id="detail-meta">2023 / DALIAN</span>
+                    </div>
+                    <button class="story-toggle-btn" id="story-toggle-btn">+ STORY NOTE</button>
+                </div>
+                <div class="detail-story-drawer" id="detail-story-drawer">
+                    <p id="detail-story-text"></p>
+                </div>
+            </div>
+
+            <div class="detail-stage-area" id="detail-stage-area">
+                <img class="detail-stage-img" id="detail-stage-img" alt="Selected Photograph">
+            </div>
+
+            <div class="detail-filmstrip-bar">
+                <div class="detail-filmstrip-counter" id="detail-filmstrip-counter">FRAME 01 OF 06</div>
+                <div class="detail-filmstrip-track" id="detail-filmstrip-track"></div>
+            </div>
         </div>
     </div>
 
+    <!-- 单图全屏极致放大模态框 -->
     <div class="zoom-modal" id="zoom-modal">
         <button class="minimal-close-btn" id="zoom-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
-        <img id="zoom-img" src="" alt="Zoomed View">
+        <img id="zoom-img" alt="Zoomed View">
     </div>
 
     <!-- ==========================================
@@ -635,10 +1307,169 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             
+            const isMobileView = () => window.innerWidth <= 768;
             const isTouchDevice = ('ontouchstart' in window) || 
                                   (navigator.maxTouchPoints > 0) || 
                                   window.matchMedia("(pointer: coarse)").matches;
 
+            // 顶层共享状态声明
+            let currentViewMode = isMobileView() ? 'grid' : 'strip';
+            let currentSeriesFilter = 'all';
+            let gridRenderedOnce = false;
+            let isDraggingStrip = false;
+            let hasDraggedStrip = false;
+            let dragStartX = 0;
+            let dragStartTrackPos = 0;
+            let lastDragX = 0;
+            let dragVelocity = 0;
+            let isNavOpen = false;
+            let isDetailModalOpen = false;
+            let isZoomModalOpen = false;
+            let activeModalSeries = null;
+            let activeModalPhotoIdx = 0;
+            let lastClickedSourceEl = null;
+
+            /* ==========================================
+               0. 摄影作品完整数据库
+               - 将 https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg 精准放置在 index 3 (默认正中间主图！)
+            ========================================== */
+            const seriesDatabase = [
+                {
+                    id: 0,
+                    code: "01",
+                    cnTitle: "色彩的温度",
+                    enTitle: "Chromatics",
+                    fullTitle: "色彩的温度 / The Temperature of Color",
+                    year: "2021",
+                    location: "BEIJING",
+                    story: "色彩不仅是视觉的表象，更是情绪的显影，从落日的余晖到几何的浓烈碰撞，色调定义了瞬间的温度。镜头捕捉光色交织的叙事，定格最直观的感官记忆。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1514.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_3550.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_1387.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/20241123-_L5A7867_Original.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0355.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0325.jpg"
+                    ]
+                },
+                {
+                    id: 1,
+                    code: "02",
+                    cnTitle: "天际轮廓",
+                    enTitle: "Skyline",
+                    fullTitle: "天际轮廓 / Skyline Contours",
+                    year: "2023",
+                    location: "DALIAN",
+                    story: "当视线越过山脊，城市的建筑肌理在晨昏的薄雾中安静地舒展。沿着山海的交界线俯瞰，用镜头丈量天际的起伏，定格这座城市最宏大的静谧。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_2655.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0491.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0249.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_4272.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_9589.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/city/IMG_0568.jpg"
+                    ]
+                },
+                {
+                    id: 2,
+                    code: "03",
+                    cnTitle: "仰望的刻度",
+                    enTitle: "Time Scale",
+                    fullTitle: "仰望的刻度 / The Scale of Time",
+                    year: "2023",
+                    location: "DALIAN",
+                    story: "云的形态是时间的具象化，远处的白云如同静止的雪山，暗沉的积云则像海浪般汹涌，把转瞬即逝的宏大折叠进一张二维的图像里成为永恒。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_2338.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0431.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/cloud/IMG_0679.jpg"
+                    ]
+                },
+                {
+                    id: 3,
+                    code: "04",
+                    cnTitle: "空濛之境",
+                    enTitle: "Hazy Realm",
+                    fullTitle: "空濛之境 / The Hazy Realm",
+                    year: "2023",
+                    location: "DALIAN",
+                    story: "雾霭漫过水面与天际，把世界揉成一片柔软的灰蓝。桥与岛在朦胧里若隐若现，所有喧嚣都沉在雾里，只剩呼吸与光影的温柔共振。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/2/IMG_5147.JPG",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/3170035~2_Original.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_1459.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/6.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/fog/IMG_2067.jpg"
+                    ]
+                },
+                {
+                    id: 4,
+                    code: "05",
+                    cnTitle: "几何与留白",
+                    enTitle: "Geometry",
+                    fullTitle: "几何与留白 / Geometry and Negative Space",
+                    year: "2022",
+                    location: "BEIJING",
+                    story: "剥离多余的喧嚣，取景框内只留下纯粹的几何与线条。摄影是一场做减法的艺术，在极致的留白与锋利的切割间，重构空间的绝对理性与平静。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0801.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/2ABA18B3-761A-4B6C-BF2A-B79CEB33B064_1_102_o.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_3545.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0072.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_1367.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/line/IMG_0063.jpg"
+                    ]
+                },
+                {
+                    id: 5,
+                    code: "06",
+                    cnTitle: "灰度架构",
+                    enTitle: "Grayscale",
+                    fullTitle: "灰度架构 / Grayscale Architecture",
+                    year: "2023",
+                    location: "DALIAN",
+                    story: "黑与白的极致对撞，抽离色彩的喧嚣，让光影成为建筑的骨血，线条成为空间的诗行。在灰度的层次里，建筑的轮廓与城市的呼吸悄然共振。",
+                    images: [
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_2973.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0657.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0280.jpg",
+                        "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg"
+                    ]
+                }
+            ];
+
+            // 展平为 33 张独立摄影作品
+            const allFrames = [];
+            seriesDatabase.forEach((series) => {
+                series.images.forEach((imgUrl, idxInSeries) => {
+                    allFrames.push({
+                        globalIndex: allFrames.length,
+                        seriesId: series.id,
+                        seriesCode: series.code,
+                        cnTitle: series.cnTitle,
+                        enTitle: series.enTitle,
+                        fullTitle: series.fullTitle,
+                        year: series.year,
+                        location: series.location,
+                        story: series.story,
+                        src: imgUrl,
+                        idxInSeries: idxInSeries,
+                        seriesTotal: series.images.length,
+                        aspectRatio: 1.42,
+                        loaded: false
+                    });
+                });
+            });
+
+            const N = allFrames.length; // 33
+            // 查找 IMG_0635.jpg 所在的精确全局索引（index 3），作为默认正中间图片
+            const defaultCenterIndex = allFrames.findIndex(f => f.src.includes('IMG_0635.jpg'));
+            const INITIAL_CENTER = defaultCenterIndex >= 0 ? defaultCenterIndex : 3;
+
+            // 首屏随机主图
             const heroImagesDatabase = [
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/2-2.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/IMG_0587.jpg",
@@ -646,61 +1477,133 @@
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg"
             ];
-            const randomHeroIndex = Math.floor(Math.random() * heroImagesDatabase.length);
-            const selectedHeroImage = heroImagesDatabase[randomHeroIndex];
-            
-            // 为主图注入图片源
             const heroImgMain = document.getElementById('hero-img-main');
-            if(heroImgMain) heroImgMain.src = selectedHeroImage;
+            if (heroImgMain) {
+                heroImgMain.src = heroImagesDatabase[Math.floor(Math.random() * heroImagesDatabase.length)];
+            }
+
+            const scrollBtn = document.getElementById('scroll-to-archive');
+            if (scrollBtn) {
+                scrollBtn.addEventListener('click', () => {
+                    document.getElementById('archive-section').scrollIntoView({ behavior: 'smooth' });
+                });
+            }
 
             /* ==========================================
-               1. 简约白色 Loading 动画逻辑
+               1. 极简建筑画框与切片流光加载动画逻辑 (零文字，全连续帧驱动)
+               - 阶段一 (0.00 -> 0.46)：由中心向两侧阶梯式自上而下垂落展开 9 根垂直几何线（呼应画廊倒 V 扩散）
+               - 阶段二 (0.36 -> 0.84)：正中央垂直线向两侧平滑推开手风琴，舒展为 36px×48px 的 1px 极简取景画框（呼应首屏画框构图）
+               - 阶段三 (0.78 -> 1.00)：两侧切片柔和收拢，中央画框轻盈放大并消融，无缝带出首屏主图
             ========================================== */
-            let currentProgress = 0;
-            const counterEl = document.getElementById('loader-counter');
             const loaderEl = document.getElementById('page-loader');
+            const loaderStageEl = document.getElementById('geo-loader-stage');
+            const centerFrameEl = document.getElementById('geo-center-frame');
+            const centerInnerEl = document.getElementById('geo-center-inner');
+            const wingSlats = Array.from(document.querySelectorAll('.geo-wing-slat'));
+            const loaderStartTime = performance.now();
+            const loaderDuration = 1320;
+            let siteReadyTriggered = false;
 
-            const simulateLoading = () => {
-                let increment = Math.random() * 15 + 5; 
-                currentProgress += increment;
-                if (currentProgress > 100) currentProgress = 100;
-                
-                counterEl.textContent = Math.floor(currentProgress) + '%';
+            const smoothCosine = (x) => {
+                const c = Math.max(0, Math.min(1, x));
+                return 0.5 * (1 - Math.cos(Math.PI * c));
+            };
 
-                if (currentProgress < 100) {
-                    setTimeout(simulateLoading, Math.random() * 40 + 30);
+            const animateLoader = (now) => {
+                const rawT = Math.min(1, Math.max(0, (now - loaderStartTime) / loaderDuration));
+
+                // 阶段一：中心向两侧自上而下阶梯垂落；阶段二：中心细线展开为矩形取景框；阶段三：无缝消融过渡
+                const expandT = smoothCosine((rawT - 0.34) / 0.48);
+                const exitT = smoothCosine((rawT - 0.78) / 0.22);
+
+                // 1. 中央取景画框：先自上而下垂落，再由 1.5px 细线平滑展开为 36px 宽的极简矩形取景框
+                const centerDropT = smoothCosine(rawT / 0.32);
+                const frameW = 1.5 + expandT * 34.5;
+                if (centerFrameEl) {
+                    centerFrameEl.style.width = `${frameW.toFixed(2)}px`;
+                    centerFrameEl.style.transform = `scaleY(${centerDropT.toFixed(4)})`;
+                    centerFrameEl.style.backgroundColor = `rgba(10, 10, 10, ${(0.92 * (1 - expandT * 0.96)).toFixed(3)})`;
+                }
+                if (centerInnerEl) {
+                    centerInnerEl.style.opacity = (expandT * (1 - exitT * 0.5)).toFixed(3);
+                }
+
+                // 2. 左右各 4 根垂直切片线：按距离中心 dist=1..4 依次垂落，并在阶段二呈现阶梯高度，阶段三轻盈收拢
+                const targetHeights = [1, 0.80, 0.58, 0.38, 0.22];
+                wingSlats.forEach((slat) => {
+                    const dist = Number(slat.dataset.dist) || 1;
+                    const delay = dist * 0.065;
+                    const dropT = smoothCosine((rawT - delay) / 0.32);
+                    const stepRatio = targetHeights[dist] || 0.3;
+                    // 从等高垂落平滑过渡到两侧阶梯高度，并在尾段随 exitT 柔和收起
+                    const currentScaleY = dropT * (1 - expandT * (1 - stepRatio)) * (1 - exitT * 0.65);
+                    const currentOpacity = Math.min(1, dropT * 1.2) * (1 - expandT * (dist * 0.11)) * (1 - exitT);
+                    slat.style.transform = `scaleY(${Math.max(0, currentScaleY).toFixed(4)})`;
+                    slat.style.opacity = Math.max(0, currentOpacity).toFixed(3);
+                });
+
+                // 3. 整体舞台在尾段轻微舒展放大，与首屏主图浮现完美衔接
+                if (loaderStageEl) {
+                    const stageScale = 1 + exitT * 0.16;
+                    loaderStageEl.style.transform = `scale(${stageScale.toFixed(4)})`;
+                    loaderStageEl.style.opacity = (1 - exitT).toFixed(3);
+                }
+
+                if (rawT >= 0.76 && !siteReadyTriggered) {
+                    siteReadyTriggered = true;
+                    document.body.classList.add('site-ready');
+                    startBackgroundSliceLoader();
+                }
+
+                if (rawT < 1) {
+                    requestAnimationFrame(animateLoader);
                 } else {
-                    setTimeout(() => {
-                        loaderEl.classList.add('loaded');
-                        setTimeout(() => loaderEl.style.display = 'none', 1300);
-                    }, 600); 
+                    loaderEl.classList.add('loaded');
+                    setTimeout(() => { loaderEl.style.display = 'none'; }, 880);
                 }
             };
-            simulateLoading();
+            requestAnimationFrame(animateLoader);
 
             /* ==========================================
-               3. 极致顺滑自定义光标
+               2. 桌面端高跟手自定义光标
             ========================================== */
             const cursor = document.getElementById('cursor');
-            let mouseX = 0, mouseY = 0, cursorX = 0, cursorY = 0, cursorVisible = false;
+            const cursorLabel = document.getElementById('cursor-label');
+            let mouseX = -100, mouseY = -100, cursorX = -100, cursorY = -100, cursorVisible = false;
 
             if (!isTouchDevice) {
                 document.addEventListener('mousemove', (e) => {
                     mouseX = e.clientX; mouseY = e.clientY;
-                    if (!cursorVisible) { cursor.style.display = 'block'; cursorVisible = true; }
-                });
+                    if (!cursorVisible) {
+                        cursorX = mouseX; cursorY = mouseY;
+                        cursor.style.display = 'flex';
+                        cursorVisible = true;
+                    }
+                }, { passive: true });
 
                 const renderCursor = () => {
-                    cursorX += (mouseX - cursorX) * 0.2; cursorY += (mouseY - cursorY) * 0.2;
-                    cursor.style.transform = `translate(${cursorX}px, ${cursorY}px) translate(-50%, -50%)`;
+                    cursorX += (mouseX - cursorX) * 0.45;
+                    cursorY += (mouseY - cursorY) * 0.45;
+                    cursor.style.transform = `translate3d(${cursorX.toFixed(1)}px, ${cursorY.toFixed(1)}px, 0) translate(-50%, -50%)`;
                     requestAnimationFrame(renderCursor);
                 };
                 requestAnimationFrame(renderCursor);
                 
-                // 监听鼠标悬浮，增加主图的专属反相光标处理
                 document.addEventListener('mouseover', (e) => {
-                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) { 
-                        cursor.classList.add('hovering'); 
+                    const sliceEl = e.target.closest('.strip-slice');
+                    if (sliceEl) {
+                        cursor.classList.add('hovering-strip');
+                        cursor.classList.remove('hovering');
+                        const idx = Number(sliceEl.dataset.index);
+                        const d = getSignedWrapDist(idx, currentTrackPos);
+                        cursorLabel.textContent = Math.abs(d) < 0.48 ? 'ZOOM' : 'CENTER';
+                    } else if (e.target.closest('.grid-card')) {
+                        cursor.classList.add('hovering-strip');
+                        cursor.classList.remove('hovering');
+                        cursorLabel.textContent = 'OPEN';
+                    } else if (e.target.closest('a, button, .filmstrip-thumb, .detail-stage-img')) { 
+                        cursor.classList.add('hovering');
+                        cursor.classList.remove('hovering-strip');
                     }
                     if (e.target.closest('#hero-wrapper')) {
                         cursor.classList.add('hovering-inverse');
@@ -708,7 +1611,10 @@
                 });
                 
                 document.addEventListener('mouseout', (e) => {
-                    if (e.target.closest('a, button, .gallery-item, .detail-images img')) { 
+                    if (e.target.closest('.strip-slice, .grid-card')) {
+                        cursor.classList.remove('hovering-strip');
+                    }
+                    if (e.target.closest('a, button, .filmstrip-thumb, .detail-stage-img')) { 
                         cursor.classList.remove('hovering'); 
                     }
                     if (e.target.closest('#hero-wrapper')) {
@@ -717,29 +1623,620 @@
                 });
             }
 
-            /* === 4. 页面滚动揭示动画 === */
-            const observerOptions = { threshold: 0.1, rootMargin: "0px 0px -100px 0px" };
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible'); observer.unobserve(entry.target); 
+            /* =========================================================
+               3. 1:1 复刻截图的两阶段「由中间向两侧倒 V 阶梯垂落扩散」载入动效
+                  + 二阶临界阻尼 (Critically-Damped ODE) 零顿挫滑行引擎
+               - 为什么之前结束时会顿一下？因为之前在动画结束瞬间切换了宽度计算分支与 hover 状态类！
+               - 现在采用解析式二阶临界阻尼方程 (阻尼比 ζ = 1.0，零回弹)：速度与加速度在抵达中心时同时渐近归零，
+                 且运动中与静止后使用 100% 同一套连续宽度方程与同一个 .is-focused 类，结束瞬间 0 状态跳变、0 顿挫！
+            ========================================================= */
+            const archiveSection = document.getElementById('archive-section');
+            const stripContainer = document.getElementById('kinetic-strip');
+            const capIndexEl = document.getElementById('cap-index');
+            const capLocationEl = document.getElementById('cap-location');
+            const capYearEl = document.getElementById('cap-year');
+            const capEnEl = document.getElementById('cap-en');
+            const capCnEl = document.getElementById('cap-cn');
+            const capTitleEl = document.getElementById('cap-title');
+
+            const HALF_WINDOW = 14; // 左右各 14 张 + 正中间 1 张 = 同屏 29 张可见切片
+            const sliceElements = [];
+            const sliceInners = [];
+            const sliceMediaNodes = [];
+
+            // 温和有机的条形码律动权重
+            const barcodeRhythm = allFrames.map((_, i) => {
+                const wave = Math.sin(i * 2.1) * 0.06 + Math.cos(i * 3.3) * 0.04;
+                return 0.62 + wave;
+            });
+
+            // 默认锁定在 IMG_0635.jpg (INITIAL_CENTER = 3)
+            let currentTrackPos = INITIAL_CENTER;
+            let animTargetPos = INITIAL_CENTER;
+            let trackVelocity = 0; // 连续速度状态，支持中途丝滑转向与渐近零顿挫停止
+            let isAnimatingTrack = false;
+            let glidingTargetIdx = -1;
+            let activeLogicalIdx = -1;
+            let lastRenderTimestamp = 0;
+
+            // 两阶段倒 V 扩散载入动画状态
+            let hasTriggeredEntrance = false;
+            let isEntranceRunning = false;
+            let entranceStartTime = 0;
+            const entranceDuration = 2050;
+            let entranceProgress = 0.0;
+            let rafId = null;
+
+            function wakeUpStripEngine() {
+                if (!rafId && !isMobileView() && currentViewMode === 'strip') {
+                    rafId = requestAnimationFrame(renderInfiniteStrip);
+                }
+            }
+
+            // 启动一段二阶临界阻尼 (ζ = 1.0) 丝滑聚焦滑行：无初速突跳、无过冲回弹、无终点顿挫
+            function glideToTrackPos(newTarget) {
+                animTargetPos = newTarget;
+                isAnimatingTrack = true;
+                glidingTargetIdx = ((Math.round(newTarget) % N) + N) % N;
+                lastRenderTimestamp = performance.now();
+
+                // 提前预加载目标切片及其邻近切片
+                for (let offset = -5; offset <= 5; offset++) {
+                    ensureSliceLoaded(glidingTargetIdx + offset);
+                }
+                // 图注直接优雅翻牌至选中的目标图片
+                if (glidingTargetIdx !== activeLogicalIdx) {
+                    activeLogicalIdx = glidingTargetIdx;
+                    updateCaptionMetadata(activeLogicalIdx);
+                }
+                wakeUpStripEngine();
+            }
+
+            function getSignedWrapDist(i, trackPos) {
+                const modPos = ((trackPos % N) + N) % N;
+                let diff = i - modPos;
+                if (diff >= N / 2) diff -= N;
+                if (diff < -N / 2) diff += N;
+                return diff;
+            }
+
+            // 创建 33 个独立切片节点
+            allFrames.forEach((frame, i) => {
+                const slice = document.createElement('div');
+                slice.className = 'strip-slice';
+                slice.dataset.index = i;
+
+                const inner = document.createElement('div');
+                inner.className = 'strip-slice-inner';
+
+                const imgEl = document.createElement('img');
+                imgEl.className = 'slice-media';
+                imgEl.alt = frame.cnTitle;
+                imgEl.decoding = 'async';
+
+                inner.appendChild(imgEl);
+                slice.appendChild(inner);
+
+                // 超清原图加载完成后自动降采样为 500p 轻量 <canvas> 节点，释放 98% 原图显存，杜绝卡顿
+                imgEl.addEventListener('load', () => {
+                    const nw = imgEl.naturalWidth || 800;
+                    const nh = imgEl.naturalHeight || 600;
+                    frame.aspectRatio = nw / nh;
+
+                    if (nh > 650 && typeof document.createElement === 'function') {
+                        try {
+                            const targetH = 500;
+                            const targetW = Math.max(64, Math.round(targetH * frame.aspectRatio));
+                            const liteCanvas = document.createElement('canvas');
+                            liteCanvas.width = targetW;
+                            liteCanvas.height = targetH;
+                            liteCanvas.className = 'slice-media';
+                            const liteCtx = liteCanvas.getContext('2d');
+                            if (liteCtx) {
+                                liteCtx.drawImage(imgEl, 0, 0, targetW, targetH);
+                                inner.replaceChild(liteCanvas, imgEl);
+                                sliceMediaNodes[i] = liteCanvas;
+                                imgEl.removeAttribute('src');
+                            }
+                        } catch (err) {}
+                    }
+                    wakeUpStripEngine();
+                });
+
+                slice.addEventListener('mouseenter', () => {
+                    if (isTouchDevice || !cursorLabel) return;
+                    const d = getSignedWrapDist(i, currentTrackPos);
+                    cursorLabel.textContent = Math.abs(d) < 0.48 ? 'ZOOM' : 'CENTER';
+                });
+
+                slice.addEventListener('click', () => {
+                    if (hasDraggedStrip || entranceProgress < 0.75) return;
+                    const d = getSignedWrapDist(i, currentTrackPos);
+                    if (Math.abs(d) > 0.38) {
+                        glideToTrackPos(Math.round(currentTrackPos + d));
+                    } else {
+                        // 点击正中间主图：使用共享几何 FLIP 动画丝滑放大打开
+                        openDetailModal(frame.seriesId, frame.idxInSeries, slice);
                     }
                 });
-            }, observerOptions);
 
-            const setupScrollAnimations = () => {
-                document.querySelectorAll('.gallery-item').forEach(el => {
-                    el.classList.remove('visible'); observer.observe(el);
+                stripContainer.appendChild(slice);
+                sliceElements.push(slice);
+                sliceInners.push(inner);
+                sliceMediaNodes.push(imgEl);
+            });
+
+            function ensureSliceLoaded(idx) {
+                const normIdx = ((idx % N) + N) % N;
+                const frame = allFrames[normIdx];
+                if (!frame || frame.loaded) return;
+                frame.loaded = true;
+                const mediaNode = sliceMediaNodes[normIdx];
+                if (mediaNode && mediaNode.tagName === 'IMG') {
+                    mediaNode.src = frame.src;
+                }
+            }
+
+            // 预加载中心视野附近的切片
+            if (!isMobileView()) {
+                for (let offset = -8; offset <= 8; offset++) {
+                    ensureSliceLoaded(INITIAL_CENTER + offset);
+                }
+            }
+
+            function startBackgroundSliceLoader() {
+                if (isMobileView()) return;
+                const queue = [];
+                for (let step = 9; step <= Math.ceil(N / 2); step++) {
+                    queue.push(INITIAL_CENTER + step);
+                    queue.push(INITIAL_CENTER - step);
+                }
+                let ptr = 0;
+                const loadNext = () => {
+                    if (ptr >= queue.length) return;
+                    ensureSliceLoaded(queue[ptr++]);
+                    setTimeout(loadNext, 75);
+                };
+                loadNext();
+            }
+
+            // 启动两阶段「中心向两侧倒 V 阶梯垂落 -> 中心全彩展开」载入动效
+            function startVCascadeEntrance() {
+                archiveSection.classList.add('entered');
+                entranceProgress = 0.0;
+                entranceStartTime = performance.now();
+                isEntranceRunning = true;
+                lastRenderTimestamp = performance.now();
+                wakeUpStripEngine();
+            }
+
+            // 监听用户滑动到画廊区域：当画廊主体进入视口 (threshold: 0.35) 时，增加 280ms 优雅延迟后再开始播放倒 V 扩散动画
+            const stripObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !hasTriggeredEntrance) {
+                        hasTriggeredEntrance = true;
+                        stripObserver.unobserve(entry.target);
+                        if (isMobileView()) {
+                            if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
+                        } else {
+                            setTimeout(() => {
+                                startVCascadeEntrance();
+                            }, 280);
+                        }
+                    }
                 });
-            };
-            setupScrollAnimations(); 
+            }, { threshold: 0.35 });
+            stripObserver.observe(stripContainer);
 
-            /* === 5. SPA 幕布过渡切换 === */
+            // 垂直滚轮 100% 留给页面自然上下滚动；仅在横向滑动或按住 Shift 时横向拨动切片
+            let wheelSnapTimer = null;
+            stripContainer.addEventListener('wheel', (e) => {
+                if (entranceProgress < 0.9) return;
+                const isHorizontalSwipe = Math.abs(e.deltaX) > Math.abs(e.deltaY) * 1.3;
+                if (isHorizontalSwipe || e.shiftKey) {
+                    e.preventDefault();
+                    const rawDelta = isHorizontalSwipe ? e.deltaX : e.deltaY;
+                    const step = Math.max(-1.0, Math.min(1.0, rawDelta * 0.008));
+                    isAnimatingTrack = false;
+                    trackVelocity = 0;
+                    glidingTargetIdx = -1;
+                    currentTrackPos += step;
+                    animTargetPos = currentTrackPos;
+                    wakeUpStripEngine();
+
+                    clearTimeout(wheelSnapTimer);
+                    wheelSnapTimer = setTimeout(() => {
+                        glideToTrackPos(Math.round(currentTrackPos));
+                    }, 120);
+                }
+            }, { passive: false });
+
+            // 鼠标左右拖拽交互
+            stripContainer.addEventListener('mousedown', (e) => {
+                if (entranceProgress < 0.9) return;
+                isDraggingStrip = true;
+                hasDraggedStrip = false;
+                isAnimatingTrack = false;
+                trackVelocity = 0;
+                glidingTargetIdx = -1;
+                dragStartX = e.clientX;
+                lastDragX = e.clientX;
+                dragVelocity = 0;
+                dragStartTrackPos = currentTrackPos;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDraggingStrip) return;
+                const dx = dragStartX - e.clientX;
+                if (Math.abs(dx) > 5) hasDraggedStrip = true;
+                const frameDx = lastDragX - e.clientX;
+                lastDragX = e.clientX;
+                const sensitivity = window.innerWidth / 10;
+                dragVelocity = frameDx / sensitivity;
+                currentTrackPos = dragStartTrackPos + (dx / sensitivity);
+                animTargetPos = currentTrackPos;
+                wakeUpStripEngine();
+            }, { passive: true });
+
+            window.addEventListener('mouseup', () => {
+                if (!isDraggingStrip) return;
+                isDraggingStrip = false;
+                const projectedTarget = Math.round(currentTrackPos + dragVelocity * 2.2);
+                glideToTrackPos(projectedTarget);
+                setTimeout(() => { hasDraggedStrip = false; }, 45);
+            });
+
+            document.getElementById('strip-prev').addEventListener('click', () => {
+                if (entranceProgress < 0.9) return;
+                const base = isAnimatingTrack ? animTargetPos : currentTrackPos;
+                glideToTrackPos(Math.round(base) - 1);
+            });
+            document.getElementById('strip-next').addEventListener('click', () => {
+                if (entranceProgress < 0.9) return;
+                const base = isAnimatingTrack ? animTargetPos : currentTrackPos;
+                glideToTrackPos(Math.round(base) + 1);
+            });
+
+            window.addEventListener('resize', () => {
+                if (isMobileView()) {
+                    if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
+                } else {
+                    wakeUpStripEngine();
+                }
+            });
+
+            // 垂直翻牌式 (Slot-Roll) 图注切换动画
+            let captionAnimTimer = null;
+            function updateCaptionMetadata(logicalIdx) {
+                const frame = allFrames[logicalIdx];
+                if (!frame) return;
+
+                const idxFormatted = `${String(logicalIdx + 1).padStart(2, '0')}—${String(N).padStart(2, '0')}`;
+                const metaItems = [capIndexEl, capLocationEl, capYearEl];
+
+                metaItems.forEach(el => el.classList.add('rolling-out'));
+                capTitleEl.classList.add('rolling-out');
+
+                clearTimeout(captionAnimTimer);
+                captionAnimTimer = setTimeout(() => {
+                    capIndexEl.textContent = idxFormatted;
+                    capLocationEl.textContent = frame.location;
+                    capYearEl.textContent = frame.year;
+                    capEnEl.textContent = frame.enTitle;
+                    capCnEl.textContent = frame.cnTitle;
+
+                    metaItems.forEach(el => {
+                        el.classList.remove('rolling-out');
+                        el.classList.add('rolling-in');
+                    });
+                    capTitleEl.classList.remove('rolling-out');
+                    capTitleEl.classList.add('rolling-in');
+
+                    void capTitleEl.offsetWidth;
+                    metaItems.forEach(el => el.classList.remove('rolling-in'));
+                    capTitleEl.classList.remove('rolling-in');
+                }, 145);
+
+                document.querySelectorAll('.series-pill').forEach(pill => {
+                    const pillSeries = pill.dataset.series;
+                    if (pillSeries !== 'all') {
+                        pill.classList.toggle('active', Number(pillSeries) === frame.seriesId);
+                    } else {
+                        pill.classList.remove('active');
+                    }
+                });
+            }
+
+            // 核心渲染循环：解析式二阶临界阻尼 (Critically-Damped ODE) + 100% 无状态分支的连续宽度函数
+            function renderInfiniteStrip(now) {
+                rafId = null;
+                if (isMobileView() || currentViewMode !== 'strip') return;
+
+                const timestamp = now || performance.now();
+                const dt = lastRenderTimestamp ? Math.min(0.05, Math.max(0.001, (timestamp - lastRenderTimestamp) / 1000)) : (1 / 60);
+                lastRenderTimestamp = timestamp;
+                let needsNextFrame = false;
+
+                // 1. 解析式二阶临界阻尼 (ζ = 1.0, ω = 6.2)：
+                //    起步加速度柔和建立，尾段速度与加速度同步以 e^(-ωt) 渐近归零，绝不产生任何回弹或终点顿挫！
+                if (isAnimatingTrack) {
+                    const omega = 6.2;
+                    const d0 = currentTrackPos - animTargetPos;
+                    const v0 = trackVelocity;
+                    const expTerm = Math.exp(-omega * dt);
+                    const nextD = (d0 + (v0 + omega * d0) * dt) * expTerm;
+                    const nextV = (v0 - omega * (v0 + omega * d0) * dt) * expTerm;
+
+                    currentTrackPos = animTargetPos + nextD;
+                    trackVelocity = nextV;
+
+                    if (Math.abs(nextD) > 0.00012 || Math.abs(nextV) > 0.0006) {
+                        needsNextFrame = true;
+                    } else {
+                        currentTrackPos = animTargetPos;
+                        trackVelocity = 0;
+                        isAnimatingTrack = false;
+                        glidingTargetIdx = -1;
+                    }
+                }
+
+                // 2. 两阶段载入动画进度更新
+                if (isEntranceRunning) {
+                    const elapsedEnt = Math.max(0, timestamp - entranceStartTime);
+                    entranceProgress = Math.min(1.0, elapsedEnt / entranceDuration);
+                    if (entranceProgress < 1.0) {
+                        needsNextFrame = true;
+                    } else {
+                        isEntranceRunning = false;
+                    }
+                }
+
+                // 3. 非自动滑行时（如手动拖拽）同步更新正中间主图的图注
+                const roundedLogical = ((Math.round(currentTrackPos) % N) + N) % N;
+                if (!isAnimatingTrack && roundedLogical !== activeLogicalIdx) {
+                    activeLogicalIdx = roundedLogical;
+                    updateCaptionMetadata(activeLogicalIdx);
+                    for (let offset = -6; offset <= 6; offset++) {
+                        ensureSliceLoaded(activeLogicalIdx + offset);
+                    }
+                }
+
+                const containerW = stripContainer.clientWidth || window.innerWidth;
+                const stripH = stripContainer.clientHeight || 450;
+                const maxActiveW = containerW * 0.45;
+
+                // 阶段一 (0.00 -> 0.58)：顶部平齐，等宽黑白切片由中心向两侧呈倒 V / U 型阶梯自上而下垂落
+                // 阶段二 (0.54 -> 1.00)：由等宽条形码平滑过渡为 Redot 手风琴宽度分布
+                const cascadePhaseT = Math.min(1.0, entranceProgress / 0.58);
+                const expandPhaseRaw = Math.max(0.0, Math.min(1.0, (entranceProgress - 0.54) / 0.46));
+                const morphToAccordion = expandPhaseRaw < 0.5
+                    ? 4 * expandPhaseRaw * expandPhaseRaw * expandPhaseRaw
+                    : 1 - Math.pow(-2 * expandPhaseRaw + 2, 3) / 2;
+
+                // 所有 33 个切片全部参与连续排序与权重计算，超出 HALF_WINDOW + 0.5 的切片权重与边距平滑归零，绝不触发 display:none 切换跳动！
+                const orderedItems = [];
+                let weightedActiveNatW = 0;
+                let totalSideWeightSum = 0;
+                let activeVisibleCount = 0;
+
+                for (let i = 0; i < N; i++) {
+                    const d = getSignedWrapDist(i, currentTrackPos);
+                    const ad = Math.abs(d);
+                    const frame = allFrames[i];
+                    // 100% 唯一、无状态分支的自然宽度计算：确保动画进行中与结束帧完全一致，绝无终点切换顿挫
+                    const natW = Math.min(maxActiveW, stripH * frame.aspectRatio);
+
+                    // 中心主图余弦峰值权重：在 d ∈ (-1, 1) 内恒满足 peak(-f) + peak(1-f) === 1.0
+                    const peak = ad < 1.0 ? 0.5 * (1 + Math.cos(Math.PI * ad)) : 0;
+                    weightedActiveNatW += peak * natW;
+
+                    // 边缘平滑归零窗：在 ad >= HALF_WINDOW + 0.5 时完全归零
+                    let edgeTaper = 0;
+                    if (ad < HALF_WINDOW + 0.5) {
+                        const windowRatio = ad / (HALF_WINDOW + 0.5);
+                        edgeTaper = Math.pow(Math.cos(windowRatio * (Math.PI / 2)), 1.4);
+                        activeVisibleCount++;
+                    }
+
+                    const neighborBoost = Math.exp(-(ad * ad) / 2.8) * 6.8 + Math.exp(-(ad * ad) / 10.5) * 2.1;
+                    const sideWeight = (1 - peak) * edgeTaper * (barcodeRhythm[i] + neighborBoost);
+                    totalSideWeightSum += sideWeight;
+
+                    orderedItems.push({
+                        i,
+                        d,
+                        ad,
+                        natW,
+                        peak,
+                        sideWeight,
+                        edgeTaper
+                    });
+                }
+
+                orderedItems.sort((a, b) => a.d - b.d);
+
+                const M = Math.max(1, activeVisibleCount);
+                const totalMarginW = M * 2;
+                const availableW = Math.max(320, containerW - totalMarginW);
+                const totalSideSpace = Math.max(M * 2, availableW - weightedActiveNatW);
+                const uniformSliceW = availableW / M;
+
+                for (let k = 0; k < N; k++) {
+                    const item = orderedItems[k];
+                    const slice = sliceElements[item.i];
+                    slice.style.order = String(k);
+
+                    if (item.edgeTaper <= 0.0001 && item.peak <= 0) {
+                        slice.style.flexGrow = '0';
+                        slice.style.margin = '0 0px';
+                        slice.style.opacity = '0';
+                        slice.style.pointerEvents = 'none';
+                        slice.classList.remove('is-focused');
+                        continue;
+                    }
+
+                    slice.style.opacity = '1';
+                    slice.style.pointerEvents = 'auto';
+
+                    const sidePx = totalSideWeightSum > 0.0001
+                        ? (item.sideWeight / totalSideWeightSum) * totalSideSpace
+                        : (totalSideSpace / M);
+
+                    const targetAccordionW = Math.max(0, item.peak * item.natW + sidePx);
+                    const currentW = uniformSliceW * (1 - morphToAccordion) + targetAccordionW * morphToAccordion;
+
+                    // 计算当前切片在阶段一中的自上而下垂落高度百分比 (由中间 ad=0 向两侧 ad=HALF_WINDOW 扩散)
+                    const normDist = Math.min(1, item.ad / HALF_WINDOW);
+                    const startThreshold = normDist * 0.62;
+                    const dropDuration = 0.38;
+                    const rawDrop = hasTriggeredEntrance
+                        ? Math.max(0, Math.min(1, (cascadePhaseT - startThreshold) / dropDuration))
+                        : 0;
+                    const easeDrop = 1 - Math.pow(1 - rawDrop, 2.4);
+                    const bottomClipPct = ((1 - easeDrop) * 100).toFixed(2);
+
+                    slice.style.flexGrow = currentW.toFixed(3);
+                    const horizMargin = item.edgeTaper < 0.15 ? (item.edgeTaper / 0.15).toFixed(2) : '1';
+                    slice.style.margin = `0 ${horizMargin}px`;
+                    slice.style.clipPath = easeDrop >= 0.998 ? 'none' : `inset(0% 0% ${bottomClipPct}% 0%)`;
+
+                    // 统一使用单一 .is-focused 类：
+                    // 点击目标切片滑向中心时，该切片从点击瞬间到抵达中心全程保持 .is-focused = true，结束帧无任何类名切换！
+                    const isFocused = morphToAccordion > 0.35 && (
+                        isAnimatingTrack ? (item.i === glidingTargetIdx || item.ad < 0.35) : (item.ad < 0.48)
+                    );
+                    slice.classList.toggle('is-focused', isFocused);
+                }
+
+                if (needsNextFrame) {
+                    rafId = requestAnimationFrame(renderInfiniteStrip);
+                }
+            }
+
+            if (!isMobileView()) {
+                wakeUpStripEngine();
+            }
+
+            /* =========================================================
+               4. 真实宽高比瀑布流画廊 (Index Grid，严格按图片实际宽高比显示)
+            ========================================================= */
+            const gridStage = document.getElementById('contact-grid-stage');
+            const stripStage = document.getElementById('kinetic-strip-stage');
+            const gridContainer = document.getElementById('contact-sheet-grid');
+            const btnModeStrip = document.getElementById('btn-mode-strip');
+            const btnModeGrid = document.getElementById('btn-mode-grid');
+
+            function renderContactGrid(seriesFilter = 'all') {
+                gridRenderedOnce = true;
+                gridContainer.innerHTML = '';
+                const filtered = seriesFilter === 'all'
+                    ? allFrames
+                    : allFrames.filter(f => String(f.seriesId) === String(seriesFilter));
+
+                const numCols = isMobileView() ? 2 : 3;
+                const colEls = [];
+                const colHeights = new Array(numCols).fill(0);
+
+                for (let c = 0; c < numCols; c++) {
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'masonry-col';
+                    gridContainer.appendChild(colDiv);
+                    colEls.push(colDiv);
+                }
+
+                filtered.forEach((frame, idx) => {
+                    let shortestCol = 0;
+                    for (let c = 1; c < numCols; c++) {
+                        if (colHeights[c] < colHeights[shortestCol]) {
+                            shortestCol = c;
+                        }
+                    }
+                    const estimatedHeight = 1 / (frame.aspectRatio || 1.35);
+                    colHeights[shortestCol] += estimatedHeight;
+
+                    const card = document.createElement('div');
+                    card.className = 'grid-card';
+                    const slideOffset = shortestCol === 0 ? '-24px' : (shortestCol === numCols - 1 ? '24px' : '0px');
+                    card.style.setProperty('--slide-from-x', slideOffset);
+
+                    const numStr = String(frame.globalIndex + 1).padStart(2, '0');
+                    card.innerHTML = `
+                        <div class="grid-card-img-box">
+                            <img src="${frame.src}" alt="${frame.cnTitle} ${numStr}" loading="lazy" decoding="async">
+                        </div>
+                        <div class="grid-card-meta">
+                            <span class="card-idx">${numStr} · ${frame.cnTitle}</span>
+                            <span>${frame.location} ${frame.year}</span>
+                        </div>
+                    `;
+                    const imgBox = card.querySelector('.grid-card-img-box');
+                    card.addEventListener('click', () => {
+                        openDetailModal(frame.seriesId, frame.idxInSeries, imgBox || card);
+                    });
+                    colEls[shortestCol].appendChild(card);
+
+                    setTimeout(() => {
+                        card.classList.add('visible');
+                    }, Math.min(400, idx * 24));
+                });
+            }
+
+            if (isMobileView()) {
+                renderContactGrid('all');
+            }
+
+            const switchGalleryMode = (mode) => {
+                if (isMobileView()) mode = 'grid';
+                if (mode === currentViewMode) return;
+                currentViewMode = mode;
+                btnModeStrip.classList.toggle('active', mode === 'strip');
+                btnModeGrid.classList.toggle('active', mode === 'grid');
+
+                if (mode === 'grid') {
+                    stripStage.style.display = 'none';
+                    gridStage.classList.add('active');
+                    renderContactGrid(currentSeriesFilter);
+                } else {
+                    gridStage.classList.remove('active');
+                    stripStage.style.display = 'flex';
+                    hasTriggeredEntrance = true;
+                    startVCascadeEntrance();
+                }
+            };
+
+            btnModeStrip.addEventListener('click', () => switchGalleryMode('strip'));
+            btnModeGrid.addEventListener('click', () => switchGalleryMode('grid'));
+
+            document.querySelectorAll('.series-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    const seriesVal = pill.dataset.series;
+                    currentSeriesFilter = seriesVal;
+
+                    document.querySelectorAll('.series-pill').forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+
+                    if (!isMobileView() && currentViewMode === 'strip') {
+                        let targetGlobalIdx = INITIAL_CENTER;
+                        if (seriesVal !== 'all') {
+                            const firstMatch = allFrames.find(f => String(f.seriesId) === String(seriesVal));
+                            if (firstMatch) {
+                                targetGlobalIdx = firstMatch.globalIndex + Math.floor(firstMatch.seriesTotal / 2);
+                            }
+                        }
+                        const d = getSignedWrapDist(targetGlobalIdx, currentTrackPos);
+                        glideToTrackPos(Math.round(currentTrackPos + d));
+                    } else {
+                        renderContactGrid(seriesVal);
+                    }
+                });
+            });
+
+            /* ==========================================
+               5. SPA 幕布过渡切换 (Works / About)
+            ========================================== */
             const navLinks = document.querySelectorAll('.nav-link[data-target]');
             const views = document.querySelectorAll('.view-section');
             const transitionCurtain = document.getElementById('page-transition');
-            
-            let isNavOpen = false, isDetailModalOpen = false, isZoomModalOpen = false;
             const menuBtn = document.getElementById('menu-btn');
             const navMenu = document.getElementById('nav-links');
             const siteHeader = document.getElementById('site-header');
@@ -761,7 +2258,9 @@
                         else { view.classList.remove('active'); view.style.display = 'none'; }
                     });
                     window.scrollTo({ top: 0, behavior: 'instant' });
-                    if(targetId === 'works') { setupScrollAnimations(); }
+                    if (targetId === 'works' && !isMobileView()) {
+                        wakeUpStripEngine();
+                    }
 
                     transitionCurtain.classList.add('done');
                     setTimeout(() => {
@@ -787,84 +2286,222 @@
                 }
             });
 
-            /* === 6. 高级组图项目画廊逻辑 (Detail Modal) === */
+            /* ==========================================
+               6. 沉浸式组图模态框：共享几何 FLIP 丝滑展开与收起动画
+               - 点击中心图片或瀑布流图片时，从被点击图片在屏幕上的真实位置与尺寸平滑飞入放大舞台
+               - 关闭时平滑缩回原位，彻底告别生硬弹窗
+            ========================================== */
             const detailModal = document.getElementById('detail-modal');
-            const detailImagesBox = document.getElementById('detail-images');
+            const detailStageImg = document.getElementById('detail-stage-img');
+            const detailFilmstripTrack = document.getElementById('detail-filmstrip-track');
+            const detailFilmstripCounter = document.getElementById('detail-filmstrip-counter');
             const desktopCloseBtn = document.getElementById('modal-close');
+            const storyToggleBtn = document.getElementById('story-toggle-btn');
+            const storyDrawer = document.getElementById('detail-story-drawer');
 
-            document.querySelectorAll('.gallery-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    document.getElementById('detail-title').textContent = item.dataset.title || "Untitled Project";
-                    document.getElementById('detail-meta').textContent = item.dataset.meta || "Xiang Visuals";
-                    const stories = (item.dataset.story || "").split('|');
-                    document.getElementById('detail-story-1').textContent = stories[0] || "";
-                    document.getElementById('detail-story-2').textContent = stories[1] || "";
-
-                    detailImagesBox.innerHTML = '';
-                    const imageUrls = (item.dataset.images || item.dataset.src).split(',');
-                    imageUrls.forEach((url, index) => {
-                        const imgEl = document.createElement('img'); imgEl.src = url.trim(); imgEl.alt = "Project Photograph";
-                        imgEl.onload = () => { setTimeout(() => { imgEl.classList.add('loaded'); }, index * 250); };
-                        detailImagesBox.appendChild(imgEl);
-                    });
-
-                    isDetailModalOpen = true; menuBtn.classList.add('active'); siteHeader.classList.add('over-modal'); 
-                    detailModal.style.display = 'block'; document.body.style.overflow = 'hidden'; detailModal.scrollTop = 0; 
-                    setTimeout(() => detailModal.classList.add('show'), 10);
-                });
+            storyToggleBtn.addEventListener('click', () => {
+                const isOpen = storyDrawer.classList.toggle('open');
+                storyToggleBtn.classList.toggle('active', isOpen);
+                storyToggleBtn.textContent = isOpen ? '− HIDE NOTE' : '+ STORY NOTE';
             });
 
-            const closeDetailModal = () => {
-                detailModal.classList.remove('show'); document.body.style.overflow = ''; 
-                isDetailModalOpen = false; if (!isNavOpen) { menuBtn.classList.remove('active'); }
-                siteHeader.classList.remove('over-modal'); 
-                setTimeout(() => { detailModal.style.display = 'none'; detailImagesBox.innerHTML = ''; }, 600); 
-            };
+            function updateModalStagePhoto(newIdx) {
+                if (!activeModalSeries) return;
+                activeModalPhotoIdx = (newIdx + activeModalSeries.images.length) % activeModalSeries.images.length;
+                const targetUrl = activeModalSeries.images[activeModalPhotoIdx];
+
+                detailStageImg.classList.add('switching');
+                setTimeout(() => {
+                    detailStageImg.src = targetUrl;
+                    detailStageImg.onload = () => {
+                        detailStageImg.classList.remove('switching');
+                    };
+                    setTimeout(() => detailStageImg.classList.remove('switching'), 60);
+                }, 180);
+
+                const curStr = String(activeModalPhotoIdx + 1).padStart(2, '0');
+                const totStr = String(activeModalSeries.images.length).padStart(2, '0');
+                detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
+
+                Array.from(detailFilmstripTrack.children).forEach((thumb, i) => {
+                    thumb.classList.toggle('active', i === activeModalPhotoIdx);
+                });
+            }
+
+            function openDetailModal(seriesId, initialPhotoIdx = 0, sourceEl = null) {
+                const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
+                activeModalSeries = series;
+                activeModalPhotoIdx = initialPhotoIdx;
+                lastClickedSourceEl = sourceEl || null;
+
+                // 记录源元素在视口中的几何坐标，用于 FLIP 丝滑共享元素展开
+                const sourceRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
+
+                document.getElementById('detail-badge').textContent = `SERIES ${series.code}`;
+                document.getElementById('detail-title').textContent = series.fullTitle;
+                document.getElementById('detail-meta').textContent = `${series.year} / ${series.location}`;
+                document.getElementById('detail-story-text').textContent = series.story;
+
+                storyDrawer.classList.remove('open');
+                storyToggleBtn.classList.remove('active');
+                storyToggleBtn.textContent = '+ STORY NOTE';
+
+                detailFilmstripTrack.innerHTML = '';
+                series.images.forEach((url, idx) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'filmstrip-thumb' + (idx === initialPhotoIdx ? ' active' : '');
+                    thumb.innerHTML = `<img src="${url}" alt="Thumbnail ${idx + 1}" loading="lazy">`;
+                    thumb.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        updateModalStagePhoto(idx);
+                    });
+                    detailFilmstripTrack.appendChild(thumb);
+                });
+
+                const targetUrl = series.images[initialPhotoIdx];
+                detailStageImg.src = targetUrl;
+                const curStr = String(initialPhotoIdx + 1).padStart(2, '0');
+                const totStr = String(series.images.length).padStart(2, '0');
+                detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
+
+                isDetailModalOpen = true;
+                menuBtn.classList.add('active');
+                siteHeader.classList.add('over-modal');
+                detailModal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+
+                // 计算 FLIP 起点位移与缩放比例
+                const matchingFrame = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === initialPhotoIdx);
+                const ar = matchingFrame ? matchingFrame.aspectRatio : 1.42;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const maxStageW = vw * (isMobileView() ? 0.92 : 0.86);
+                const maxStageH = vh * (isMobileView() ? 0.52 : 0.64);
+                const estTargetW = Math.min(maxStageW, maxStageH * ar);
+                const estTargetH = estTargetW / ar;
+
+                let flipDx = 0;
+                let flipDy = 24;
+                let flipScale = 0.86;
+                if (sourceRect && sourceRect.width > 10 && sourceRect.height > 10) {
+                    const srcCenterX = sourceRect.left + sourceRect.width / 2;
+                    const srcCenterY = sourceRect.top + sourceRect.height / 2;
+                    const stageCenterX = vw / 2;
+                    const stageCenterY = vh * 0.48;
+                    flipDx = srcCenterX - stageCenterX;
+                    flipDy = srcCenterY - stageCenterY;
+                    flipScale = Math.max(0.32, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
+                }
+
+                detailStageImg.style.transition = 'none';
+                detailStageImg.style.transform = `translate3d(${flipDx.toFixed(1)}px, ${flipDy.toFixed(1)}px, 0) scale(${flipScale.toFixed(3)})`;
+                detailStageImg.style.opacity = '0.25';
+                void detailStageImg.offsetWidth;
+
+                requestAnimationFrame(() => {
+                    detailModal.classList.add('show');
+                    detailStageImg.style.transition = 'transform 0.72s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1)';
+                    detailStageImg.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
+                    detailStageImg.style.opacity = '1';
+                });
+            }
+
+            function closeDetailModal() {
+                detailModal.classList.remove('show');
+                isDetailModalOpen = false;
+                if (!isNavOpen) { menuBtn.classList.remove('active'); }
+                siteHeader.classList.remove('over-modal');
+
+                // 收起时沿着原点击位置轻盈缩回
+                if (lastClickedSourceEl) {
+                    const rect = lastClickedSourceEl.getBoundingClientRect();
+                    if (rect && rect.width > 10 && rect.top >= -100 && rect.bottom <= window.innerHeight + 100) {
+                        const dx = (rect.left + rect.width / 2 - window.innerWidth / 2) * 0.65;
+                        const dy = (rect.top + rect.height / 2 - window.innerHeight * 0.48) * 0.65;
+                        detailStageImg.style.transition = 'transform 0.56s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
+                        detailStageImg.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(0.68)`;
+                        detailStageImg.style.opacity = '0';
+                    } else {
+                        detailStageImg.style.transform = 'translate3d(0, 18px, 0) scale(0.92)';
+                        detailStageImg.style.opacity = '0';
+                    }
+                } else {
+                    detailStageImg.style.transform = 'translate3d(0, 18px, 0) scale(0.92)';
+                    detailStageImg.style.opacity = '0';
+                }
+
+                document.body.style.overflow = '';
+                setTimeout(() => {
+                    if (!isDetailModalOpen) {
+                        detailModal.style.display = 'none';
+                        detailStageImg.style.transform = '';
+                        detailStageImg.style.opacity = '';
+                    }
+                }, 580);
+            }
+
             desktopCloseBtn.addEventListener('click', closeDetailModal);
-            detailModal.addEventListener('click', (e) => { if (e.target === detailModal || e.target.classList.contains('detail-content-wrapper')) { closeDetailModal(); } });
-
-            /* === 7. 单图极致放大模态框及隐式切换逻辑 (Zoom Modal) === */
-            const zoomModal = document.getElementById('zoom-modal');
-            const zoomImg = document.getElementById('zoom-img');
-            const desktopZoomClose = document.getElementById('zoom-close');
-            let currentZoomImages = [], currentZoomIndex = 0, updateZoomTimeout, touchStartX = 0, touchEndX = 0;
-
-            const updateZoomImage = () => {
-                zoomImg.classList.add('updating');
-                clearTimeout(updateZoomTimeout);
-                updateZoomTimeout = setTimeout(() => { zoomImg.src = currentZoomImages[currentZoomIndex]; zoomImg.classList.remove('updating'); }, 250);
-            };
-
-            detailImagesBox.addEventListener('click', (e) => {
-                if (e.target.tagName === 'IMG') {
-                    const imgs = Array.from(detailImagesBox.querySelectorAll('img'));
-                    currentZoomImages = imgs.map(img => img.src);
-                    currentZoomIndex = currentZoomImages.indexOf(e.target.src);
-                    zoomImg.src = e.target.src; isZoomModalOpen = true; zoomModal.style.display = 'flex'; setTimeout(() => zoomModal.classList.add('show'), 10);
+            detailModal.addEventListener('click', (e) => {
+                if (e.target === detailModal || e.target.classList.contains('detail-content-wrapper') || e.target.classList.contains('detail-stage-area')) {
+                    closeDetailModal();
                 }
             });
 
-            const closeZoomModal = () => {
-                zoomModal.classList.remove('show'); isZoomModalOpen = false; 
-                setTimeout(() => { zoomModal.style.display = 'none'; zoomImg.src = ''; zoomImg.classList.remove('updating'); }, 600);
-            };
+            /* ==========================================
+               7. 单图极致放大模态框及全键盘支持 (Zoom Modal)
+            ========================================== */
+            const zoomModal = document.getElementById('zoom-modal');
+            const zoomImg = document.getElementById('zoom-img');
+            const desktopZoomClose = document.getElementById('zoom-close');
+
+            detailStageImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                zoomImg.src = detailStageImg.src;
+                isZoomModalOpen = true;
+                zoomModal.style.display = 'flex';
+                void zoomModal.offsetWidth;
+                requestAnimationFrame(() => {
+                    zoomModal.classList.add('show');
+                });
+            });
+
+            function closeZoomModal() {
+                zoomModal.classList.remove('show');
+                isZoomModalOpen = false;
+                setTimeout(() => {
+                    if (!isZoomModalOpen) {
+                        zoomModal.style.display = 'none';
+                        zoomImg.src = '';
+                    }
+                }, 560);
+            }
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
             zoomModal.addEventListener('click', (e) => { if (e.target === zoomModal) closeZoomModal(); });
 
-            zoomModal.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-            zoomModal.addEventListener('touchend', (e) => {
-                touchEndX = e.changedTouches[0].screenX;
-                const swipeThreshold = 50; 
-                if (touchEndX < touchStartX - swipeThreshold && currentZoomIndex < currentZoomImages.length - 1) { currentZoomIndex++; updateZoomImage(); }
-                if (touchEndX > touchStartX + swipeThreshold && currentZoomIndex > 0) { currentZoomIndex--; updateZoomImage(); }
-            }, { passive: true });
-
+            // 全局方向键与 ESC 支持 (优雅单向滑行)
             document.addEventListener('keydown', (e) => {
                 if (isZoomModalOpen) {
-                    if (e.key === 'ArrowLeft' && currentZoomIndex > 0) { currentZoomIndex--; updateZoomImage(); }
-                    else if (e.key === 'ArrowRight' && currentZoomIndex < currentZoomImages.length - 1) { currentZoomIndex++; updateZoomImage(); }
-                    else if (e.key === 'Escape') { closeZoomModal(); }
+                    if (e.key === 'Escape') closeZoomModal();
+                    else if (e.key === 'ArrowRight') {
+                        updateModalStagePhoto(activeModalPhotoIdx + 1);
+                        setTimeout(() => { zoomImg.src = detailStageImg.src; }, 190);
+                    } else if (e.key === 'ArrowLeft') {
+                        updateModalStagePhoto(activeModalPhotoIdx - 1);
+                        setTimeout(() => { zoomImg.src = detailStageImg.src; }, 190);
+                    }
+                } else if (isDetailModalOpen) {
+                    if (e.key === 'Escape') closeDetailModal();
+                    else if (e.key === 'ArrowRight') updateModalStagePhoto(activeModalPhotoIdx + 1);
+                    else if (e.key === 'ArrowLeft') updateModalStagePhoto(activeModalPhotoIdx - 1);
+                } else if (!isMobileView() && currentViewMode === 'strip' && entranceProgress >= 0.9) {
+                    if (e.key === 'ArrowRight') {
+                        const base = isAnimatingTrack ? animTargetPos : currentTrackPos;
+                        glideToTrackPos(Math.round(base) + 1);
+                    } else if (e.key === 'ArrowLeft') {
+                        const base = isAnimatingTrack ? animTargetPos : currentTrackPos;
+                        glideToTrackPos(Math.round(base) - 1);
+                    }
                 }
             });
         });
