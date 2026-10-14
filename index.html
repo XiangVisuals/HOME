@@ -319,6 +319,12 @@
             justify-content: space-between;
             background-color: var(--bg-color);
             overflow: hidden;
+            transition: transform 0.78s var(--ease-silky), opacity 0.62s var(--ease-silky), filter 0.68s var(--ease-silky);
+        }
+        body.modal-viewing .archive-showcase-section {
+            transform: scale(0.975);
+            opacity: 0.22;
+            filter: blur(6px);
         }
 
         /* 顶部轻量控制栏 */
@@ -734,10 +740,12 @@
         }
 
         /* =========================================================
-           沉浸式组图检视模态框：共享几何 FLIP 丝滑展开 + 顶底栏协同入场
+           沉浸式组图检视模态框：
+           - 弃用 display:none 切换（避免浏览器合并首帧跳过动画），改用常驻布局 + visibility/opacity 丝滑过渡
+           - 点击中间图片后，中央主图从原位置平滑放大至舞台中央，四周内容（顶栏、中心向外延展的 1px 细线、左右导航、底部由中心向两侧阶梯垂落展开的胶片缩略图）缓缓浮现
         ========================================================= */
         .detail-modal {
-            display: none;
+            display: block;
             position: fixed;
             inset: 0;
             width: 100%;
@@ -747,14 +755,21 @@
             -webkit-backdrop-filter: blur(22px);
             z-index: 2000;
             opacity: 0;
-            transition: opacity 0.62s var(--ease-silky);
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.68s var(--ease-silky), visibility 0s linear 0.68s;
             overflow-y: auto;
             color: var(--text-main);
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
         .detail-modal::-webkit-scrollbar { display: none; }
-        .detail-modal.show { opacity: 1; }
+        .detail-modal.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.68s var(--ease-silky), visibility 0s linear 0s;
+        }
 
         .detail-content-wrapper {
             display: flex;
@@ -766,14 +781,33 @@
             margin: 0 auto;
         }
 
+        /* 顶部信息区：在中央图片开始放大后，从上方柔和浮现，底部 1px 细线由中心向两侧舒展 */
         .detail-header-block {
+            position: relative;
+            padding-bottom: 18px;
             opacity: 0;
-            transform: translateY(-14px);
-            transition: opacity 0.58s var(--ease-silky) 0.08s, transform 0.65s var(--ease-silky) 0.08s;
+            transform: translateY(14px);
+            transition: opacity 0.32s ease, transform 0.32s ease;
         }
         .detail-modal.show .detail-header-block {
             opacity: 1;
             transform: translateY(0);
+            transition: opacity 0.85s var(--ease-silky) 0.24s, transform 0.85s var(--ease-silky) 0.24s;
+        }
+        .detail-header-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: var(--border-color);
+            transform: scaleX(0);
+            transform-origin: center center;
+            transition: transform 0.35s var(--ease-silky);
+        }
+        .detail-modal.show .detail-header-line {
+            transform: scaleX(1);
+            transition: transform 0.95s var(--ease-silky) 0.28s;
         }
 
         .detail-top-bar {
@@ -855,7 +889,7 @@
             min-height: 56vh;
         }
         .detail-stage-img {
-            max-width: 86vw;
+            max-width: 78vw;
             max-height: 64vh;
             width: auto;
             height: auto;
@@ -863,7 +897,7 @@
             box-shadow: 0 28px 68px rgba(0, 0, 0, 0.08);
             transform-origin: center center;
             will-change: transform, opacity;
-            transition: transform 0.72s var(--ease-silky), opacity 0.52s var(--ease-silky), box-shadow 0.72s var(--ease-silky);
+            transition: transform 0.78s var(--ease-silky), opacity 0.56s var(--ease-silky), box-shadow 0.78s var(--ease-silky);
         }
         .detail-stage-img.switching {
             opacity: 0;
@@ -871,24 +905,86 @@
             transition: transform 0.28s var(--ease-silky), opacity 0.24s ease;
         }
 
+        /* 舞台左右两侧由中心向外缓缓浮现的切换箭头与竖向装饰线 */
+        .detail-side-nav {
+            position: absolute;
+            top: 50%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: none;
+            border: none;
+            color: var(--text-main);
+            padding: 12px;
+            opacity: 0;
+            z-index: 5;
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+        .detail-side-nav.prev {
+            left: 0;
+            transform: translate(18px, -50%);
+        }
+        .detail-side-nav.next {
+            right: 0;
+            transform: translate(-18px, -50%);
+        }
+        .detail-modal.show .detail-side-nav.prev,
+        .detail-modal.show .detail-side-nav.next {
+            opacity: 1;
+            transform: translate(0, -50%);
+            transition: opacity 0.85s var(--ease-silky) 0.30s, transform 0.85s var(--ease-silky) 0.30s;
+        }
+        .detail-side-nav .nav-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.35s var(--ease-silky);
+        }
+        .detail-side-nav .nav-line {
+            width: 22px;
+            height: 1px;
+            background-color: var(--border-color);
+            transition: width 0.35s var(--ease-silky), background-color 0.35s var(--ease-silky);
+        }
+        .detail-side-nav:hover .nav-circle {
+            border-color: var(--text-main);
+            background-color: var(--text-main);
+            color: #ffffff;
+            transform: scale(1.06);
+        }
+        .detail-side-nav:hover .nav-line {
+            width: 32px;
+            background-color: var(--text-main);
+        }
+        .detail-side-nav svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* 底部胶片栏：计数器柔和浮现，缩略图由中间向两侧呈阶梯垂落展开（呼应全站切片扩散设计语言） */
         .detail-filmstrip-bar {
             display: flex;
             flex-direction: column;
             gap: 12px;
             align-items: center;
-            opacity: 0;
-            transform: translateY(16px);
-            transition: opacity 0.58s var(--ease-silky) 0.12s, transform 0.65s var(--ease-silky) 0.12s;
-        }
-        .detail-modal.show .detail-filmstrip-bar {
-            opacity: 1;
-            transform: translateY(0);
         }
         .detail-filmstrip-counter {
             font-size: 9px;
             letter-spacing: 3px;
             color: var(--text-sub);
             text-transform: uppercase;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+        .detail-modal.show .detail-filmstrip-counter {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.82s var(--ease-silky) 0.28s, transform 0.82s var(--ease-silky) 0.28s;
         }
         .detail-filmstrip-track {
             display: flex;
@@ -903,22 +999,34 @@
             height: 68px;
             width: auto;
             overflow: hidden;
-            opacity: 0.45;
+            opacity: 0;
             filter: grayscale(100%);
-            transition: opacity 0.38s var(--ease-silky), filter 0.38s var(--ease-silky), transform 0.38s var(--ease-silky);
+            clip-path: inset(0% 0% 100% 0%);
+            transform: translateY(12px);
+            transition: opacity 0.28s ease, transform 0.28s ease, clip-path 0.28s ease;
             flex-shrink: 0;
             border: 1px solid transparent;
+        }
+        .detail-modal.show .filmstrip-thumb {
+            opacity: 0.45;
+            clip-path: inset(0% 0% 0% 0%);
+            transform: translateY(0);
+            transition:
+                clip-path 0.78s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
+                opacity 0.68s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
+                transform 0.68s var(--ease-silky) calc(0.28s + var(--thumb-delay, 0ms)),
+                filter 0.38s var(--ease-silky);
         }
         .filmstrip-thumb img {
             height: 100%;
             width: auto;
             display: block;
         }
-        .filmstrip-thumb:hover {
-            opacity: 0.85;
+        .detail-modal.show .filmstrip-thumb:hover {
+            opacity: 0.88;
             filter: grayscale(0%);
         }
-        .filmstrip-thumb.active {
+        .detail-modal.show .filmstrip-thumb.active {
             opacity: 1;
             filter: grayscale(0%);
             border-color: var(--text-main);
@@ -932,13 +1040,14 @@
             background: none; border: none; z-index: 2010;
             color: var(--text-main); padding: 8px;
             opacity: 0;
-            transform: translateY(-8px);
-            transition: opacity 0.52s var(--ease-silky) 0.1s, transform 0.52s var(--ease-silky) 0.1s;
+            transform: translateY(-10px);
+            transition: opacity 0.28s ease, transform 0.28s ease;
         }
         .detail-modal.show .minimal-close-btn,
         .zoom-modal.show .minimal-close-btn {
             opacity: 1;
             transform: translateY(0);
+            transition: opacity 0.82s var(--ease-silky) 0.34s, transform 0.82s var(--ease-silky) 0.34s;
         }
         .minimal-close-btn .close-text {
             font-family: var(--font-sans); font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; transition: transform 0.35s var(--ease-silky), opacity 0.35s var(--ease-silky);
@@ -956,21 +1065,29 @@
 
         /* === 单图极致放大模态框 === */
         .zoom-modal {
-            display: none; position: fixed; inset: 0; width: 100%; height: 100%;
+            display: flex; position: fixed; inset: 0; width: 100%; height: 100%;
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             z-index: 3000;
-            justify-content: center; align-items: center; opacity: 0;
-            transition: opacity 0.58s var(--ease-silky);
+            justify-content: center; align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.62s var(--ease-silky), visibility 0s linear 0.62s;
         }
-        .zoom-modal.show { display: flex; opacity: 1; }
+        .zoom-modal.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transition: opacity 0.62s var(--ease-silky), visibility 0s linear 0s;
+        }
         .zoom-modal img {
             max-width: 92vw; max-height: 92vh; object-fit: contain;
             box-shadow: 0 28px 72px rgba(0,0,0,0.08);
-            transform: scale(0.92);
+            transform: scale(0.88);
             opacity: 0;
-            transition: transform 0.68s var(--ease-silky), opacity 0.52s var(--ease-silky);
+            transition: transform 0.76s var(--ease-silky), opacity 0.56s var(--ease-silky);
         }
         .zoom-modal.show img { transform: scale(1); opacity: 1; }
 
@@ -1080,6 +1197,7 @@
             .detail-content-wrapper { padding: 75px 5vw 30px; }
             .detail-top-bar { padding-right: 0; flex-direction: column; align-items: flex-start; gap: 10px; }
             .detail-stage-img { max-width: 92vw; max-height: 52vh; }
+            .detail-side-nav { display: none !important; }
 
             .site-footer { flex-direction: column; gap: 15px; padding: 30px 5vw; text-align: center; }
         }
@@ -1266,8 +1384,8 @@
         <div class="footer-right">DESIGNED & PHOTOGRAPHED BY XIANG</div>
     </footer>
 
-    <!-- 沉浸式组图模态框：共享几何 FLIP 丝滑展开 + 底部同组等高胶片流 -->
-    <div class="detail-modal" id="detail-modal">
+    <!-- 沉浸式组图模态框：中央主图 FLIP 丝滑展开 + 四周元素（顶栏、两侧导览、底部胶片阶梯）由中心向外缓缓浮现 -->
+    <div class="detail-modal" id="detail-modal" aria-hidden="true">
         <button class="minimal-close-btn" id="modal-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <div class="detail-content-wrapper">
             <div class="detail-header-block">
@@ -1282,10 +1400,31 @@
                 <div class="detail-story-drawer" id="detail-story-drawer">
                     <p id="detail-story-text"></p>
                 </div>
+                <div class="detail-header-line"></div>
             </div>
 
             <div class="detail-stage-area" id="detail-stage-area">
+                <button class="detail-side-nav prev" id="detail-prev-btn" aria-label="Previous Frame">
+                    <span class="nav-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                    </span>
+                    <span class="nav-line"></span>
+                </button>
+
                 <img class="detail-stage-img" id="detail-stage-img" alt="Selected Photograph">
+
+                <button class="detail-side-nav next" id="detail-next-btn" aria-label="Next Frame">
+                    <span class="nav-line"></span>
+                    <span class="nav-circle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </span>
+                </button>
             </div>
 
             <div class="detail-filmstrip-bar">
@@ -1945,6 +2084,12 @@
                         pill.classList.remove('active');
                     }
                 });
+
+                // 静默预热当前正中间主图至放大舞台，确保用户点击中间图片时 0ms 无白闪平滑展开
+                const stageImgEl = document.getElementById('detail-stage-img');
+                if (!isDetailModalOpen && stageImgEl) {
+                    stageImgEl.src = frame.src;
+                }
             }
 
             // 核心渲染循环：解析式二阶临界阻尼 (Critically-Damped ODE) + 100% 无状态分支的连续宽度函数
@@ -2287,17 +2432,22 @@
             });
 
             /* ==========================================
-               6. 沉浸式组图模态框：共享几何 FLIP 丝滑展开与收起动画
-               - 点击中心图片或瀑布流图片时，从被点击图片在屏幕上的真实位置与尺寸平滑飞入放大舞台
-               - 关闭时平滑缩回原位，彻底告别生硬弹窗
+               6. 沉浸式组图模态框：
+               - 中央图片从被点击的原位 (FLIP) 平滑过渡到舞台正中
+               - 四周内容（顶部标题与 1px 中心扩散细线、左右两侧导览按钮、底部由中间向两侧阶梯垂落展开的胶片缩略图、右上角关闭按钮）在主图展开过程中缓缓浮现
             ========================================== */
             const detailModal = document.getElementById('detail-modal');
             const detailStageImg = document.getElementById('detail-stage-img');
             const detailFilmstripTrack = document.getElementById('detail-filmstrip-track');
             const detailFilmstripCounter = document.getElementById('detail-filmstrip-counter');
             const desktopCloseBtn = document.getElementById('modal-close');
+            const detailPrevBtn = document.getElementById('detail-prev-btn');
+            const detailNextBtn = document.getElementById('detail-next-btn');
             const storyToggleBtn = document.getElementById('story-toggle-btn');
             const storyDrawer = document.getElementById('detail-story-drawer');
+
+            // 预热当前中心主图到 detailStageImg，确保点击瞬间 0ms 零延迟立即可见并执行 FLIP 过渡
+            detailStageImg.src = allFrames[INITIAL_CENTER].src;
 
             storyToggleBtn.addEventListener('click', () => {
                 const isOpen = storyDrawer.classList.toggle('open');
@@ -2328,13 +2478,26 @@
                 });
             }
 
+            if (detailPrevBtn) {
+                detailPrevBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    updateModalStagePhoto(activeModalPhotoIdx - 1);
+                });
+            }
+            if (detailNextBtn) {
+                detailNextBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    updateModalStagePhoto(activeModalPhotoIdx + 1);
+                });
+            }
+
             function openDetailModal(seriesId, initialPhotoIdx = 0, sourceEl = null) {
                 const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
                 activeModalSeries = series;
                 activeModalPhotoIdx = initialPhotoIdx;
                 lastClickedSourceEl = sourceEl || null;
 
-                // 记录源元素在视口中的几何坐标，用于 FLIP 丝滑共享元素展开
+                // 记录被点击图片在视口中的精确矩形，用于 FLIP 共享几何过渡
                 const sourceRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
 
                 document.getElementById('detail-badge').textContent = `SERIES ${series.code}`;
@@ -2346,10 +2509,13 @@
                 storyToggleBtn.classList.remove('active');
                 storyToggleBtn.textContent = '+ STORY NOTE';
 
+                // 底部胶片缩略图：赋予由中心选中项向左右两侧扩散的阶梯延迟 (--thumb-delay)，与画廊倒 V 扩散动效一脉相承
                 detailFilmstripTrack.innerHTML = '';
                 series.images.forEach((url, idx) => {
                     const thumb = document.createElement('div');
                     thumb.className = 'filmstrip-thumb' + (idx === initialPhotoIdx ? ' active' : '');
+                    const distFromActive = Math.abs(idx - initialPhotoIdx);
+                    thumb.style.setProperty('--thumb-delay', `${distFromActive * 65}ms`);
                     thumb.innerHTML = `<img src="${url}" alt="Thumbnail ${idx + 1}" loading="lazy">`;
                     thumb.addEventListener('click', (e) => {
                         e.stopPropagation();
@@ -2359,7 +2525,9 @@
                 });
 
                 const targetUrl = series.images[initialPhotoIdx];
-                detailStageImg.src = targetUrl;
+                if (detailStageImg.src !== targetUrl) {
+                    detailStageImg.src = targetUrl;
+                }
                 const curStr = String(initialPhotoIdx + 1).padStart(2, '0');
                 const totStr = String(series.images.length).padStart(2, '0');
                 detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
@@ -2367,22 +2535,21 @@
                 isDetailModalOpen = true;
                 menuBtn.classList.add('active');
                 siteHeader.classList.add('over-modal');
-                detailModal.style.display = 'block';
                 document.body.style.overflow = 'hidden';
 
-                // 计算 FLIP 起点位移与缩放比例
+                // 计算 FLIP 起点位移与缩放比例（让大图第一帧严格对齐被点击的中心图片）
                 const matchingFrame = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === initialPhotoIdx);
                 const ar = matchingFrame ? matchingFrame.aspectRatio : 1.42;
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const maxStageW = vw * (isMobileView() ? 0.92 : 0.86);
+                const maxStageW = vw * (isMobileView() ? 0.92 : 0.78);
                 const maxStageH = vh * (isMobileView() ? 0.52 : 0.64);
                 const estTargetW = Math.min(maxStageW, maxStageH * ar);
                 const estTargetH = estTargetW / ar;
 
                 let flipDx = 0;
-                let flipDy = 24;
-                let flipScale = 0.86;
+                let flipDy = 22;
+                let flipScale = 0.76;
                 if (sourceRect && sourceRect.width > 10 && sourceRect.height > 10) {
                     const srcCenterX = sourceRect.left + sourceRect.width / 2;
                     const srcCenterY = sourceRect.top + sourceRect.height / 2;
@@ -2390,36 +2557,48 @@
                     const stageCenterY = vh * 0.48;
                     flipDx = srcCenterX - stageCenterX;
                     flipDy = srcCenterY - stageCenterY;
-                    flipScale = Math.max(0.32, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
+                    flipScale = Math.max(0.38, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
                 }
 
+                // 第一帧：先将模态框设为 visibility: visible（保证全部子元素脱离 hidden 状态并完成初始样式提交），
+                // 同时将中央大图精准放置在被点击图片的原位置与原缩放比例，四周元素全部处于初始隐藏位置
+                detailModal.classList.remove('show');
+                detailModal.style.visibility = 'visible';
                 detailStageImg.style.transition = 'none';
                 detailStageImg.style.transform = `translate3d(${flipDx.toFixed(1)}px, ${flipDy.toFixed(1)}px, 0) scale(${flipScale.toFixed(3)})`;
-                detailStageImg.style.opacity = '0.25';
-                void detailStageImg.offsetWidth;
+                detailStageImg.style.opacity = '0.92';
+                void detailModal.offsetHeight;
+                void detailStageImg.getBoundingClientRect();
 
+                // 双重 requestAnimationFrame：确保浏览器已完成第一帧（原位状态）合成，
+                // 随后中央大图丝滑放大至舞台中央，四周内容（顶栏、两侧导览、底部胶片阶梯）按延迟依次缓缓浮现！
                 requestAnimationFrame(() => {
-                    detailModal.classList.add('show');
-                    detailStageImg.style.transition = 'transform 0.72s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1)';
-                    detailStageImg.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
-                    detailStageImg.style.opacity = '1';
+                    requestAnimationFrame(() => {
+                        if (!isDetailModalOpen) return;
+                        document.body.classList.add('modal-viewing');
+                        detailModal.classList.add('show');
+                        detailStageImg.style.transition = 'transform 0.82s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.58s cubic-bezier(0.22, 1, 0.36, 1)';
+                        detailStageImg.style.transform = 'translate3d(0px, 0px, 0) scale(1)';
+                        detailStageImg.style.opacity = '1';
+                    });
                 });
             }
 
             function closeDetailModal() {
+                document.body.classList.remove('modal-viewing');
                 detailModal.classList.remove('show');
                 isDetailModalOpen = false;
                 if (!isNavOpen) { menuBtn.classList.remove('active'); }
                 siteHeader.classList.remove('over-modal');
 
-                // 收起时沿着原点击位置轻盈缩回
+                // 收起时四周内容先行隐去，中央大图沿着原点击位置轻盈缩回
                 if (lastClickedSourceEl) {
                     const rect = lastClickedSourceEl.getBoundingClientRect();
                     if (rect && rect.width > 10 && rect.top >= -100 && rect.bottom <= window.innerHeight + 100) {
-                        const dx = (rect.left + rect.width / 2 - window.innerWidth / 2) * 0.65;
-                        const dy = (rect.top + rect.height / 2 - window.innerHeight * 0.48) * 0.65;
-                        detailStageImg.style.transition = 'transform 0.56s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.44s cubic-bezier(0.22, 1, 0.36, 1)';
-                        detailStageImg.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(0.68)`;
+                        const dx = (rect.left + rect.width / 2 - window.innerWidth / 2) * 0.72;
+                        const dy = (rect.top + rect.height / 2 - window.innerHeight * 0.48) * 0.72;
+                        detailStageImg.style.transition = 'transform 0.62s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.48s cubic-bezier(0.22, 1, 0.36, 1)';
+                        detailStageImg.style.transform = `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0) scale(0.72)`;
                         detailStageImg.style.opacity = '0';
                     } else {
                         detailStageImg.style.transform = 'translate3d(0, 18px, 0) scale(0.92)';
@@ -2433,11 +2612,11 @@
                 document.body.style.overflow = '';
                 setTimeout(() => {
                     if (!isDetailModalOpen) {
-                        detailModal.style.display = 'none';
+                        detailModal.style.visibility = '';
                         detailStageImg.style.transform = '';
                         detailStageImg.style.opacity = '';
                     }
-                }, 580);
+                }, 680);
             }
 
             desktopCloseBtn.addEventListener('click', closeDetailModal);
@@ -2458,10 +2637,14 @@
                 e.stopPropagation();
                 zoomImg.src = detailStageImg.src;
                 isZoomModalOpen = true;
-                zoomModal.style.display = 'flex';
-                void zoomModal.offsetWidth;
+                zoomModal.classList.remove('show');
+                zoomModal.style.visibility = 'visible';
+                void zoomModal.offsetHeight;
                 requestAnimationFrame(() => {
-                    zoomModal.classList.add('show');
+                    requestAnimationFrame(() => {
+                        if (!isZoomModalOpen) return;
+                        zoomModal.classList.add('show');
+                    });
                 });
             });
 
@@ -2470,10 +2653,9 @@
                 isZoomModalOpen = false;
                 setTimeout(() => {
                     if (!isZoomModalOpen) {
-                        zoomModal.style.display = 'none';
-                        zoomImg.src = '';
+                        zoomModal.style.visibility = '';
                     }
-                }, 560);
+                }, 620);
             }
 
             desktopZoomClose.addEventListener('click', closeZoomModal);
