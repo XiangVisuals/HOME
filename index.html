@@ -247,16 +247,15 @@
         }
         .view-section.active { display: block; opacity: 1; }
 
-        /* === 首页：主视觉区 (针对 Safari 浮动地址栏与视口高度彻底防露底) === */
+        /* === 首页：主视觉区 (紧凑衔接无多余空隙，同时适配 Safari 视口) === */
         .hero-section {
             min-height: 100vh;
-            min-height: 100lvh;
-            height: calc(100lvh + env(safe-area-inset-bottom, 0px));
+            height: 100svh;
             width: 100vw;
             display: flex; align-items: center; justify-content: center;
             position: relative;
-            padding: 0 10vw env(safe-area-inset-bottom, 0px);
-            margin-bottom: 6vh;
+            padding: 0 10vw;
+            margin-bottom: 0;
             background-color: var(--bg-color);
         }
 
@@ -320,18 +319,16 @@
             position: relative;
             width: 100vw;
             min-height: 92vh;
-            padding: 80px 0 60px;
+            padding: 48px 0 60px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             background-color: var(--bg-color);
             overflow: hidden;
-            transition: transform 0.78s var(--ease-silky), opacity 0.62s var(--ease-silky), filter 0.68s var(--ease-silky);
+            transition: opacity 0.52s var(--ease-silky);
         }
         body.modal-viewing .archive-showcase-section {
-            transform: scale(0.975);
             opacity: 0.22;
-            filter: blur(6px);
         }
 
         /* 顶部轻量控制栏 */
@@ -487,9 +484,8 @@
             margin: 0 1px;
             overflow: hidden;
             background-color: #efefef;
-            will-change: flex-grow, clip-path;
-            /* 初始未触发前完全向上收起 (顶部对齐，底部裁切 100%) */
-            clip-path: inset(0% 0% 100% 0%);
+            /* 初始未触发前完全向上收起：使用纯 GPU 硬件加速位移替代高开销的 clip-path 遮罩 */
+            transform: translate3d(0, -100%, 0);
         }
 
         .strip-slice-inner {
@@ -500,8 +496,7 @@
             overflow: hidden;
         }
 
-        /* 默认高对比黑白，中心主图、被点击滑向中心的目标图与鼠标悬浮切片平滑过渡为彩色
-           注意：去除 hover 与 focused 之间的 scale 突变，使动画结束瞬间 0 跳动！ */
+        /* 针对 Safari 极致优化：使用单一轻量 grayscale(1) 滤镜，避免叠加多重滤镜与常驻缩放造成的 WebKit 离屏渲染卡顿 */
         .strip-slice .slice-media {
             width: 100%;
             height: 100%;
@@ -509,20 +504,18 @@
             object-position: 50% 50%;
             display: block;
             pointer-events: none;
-            filter: grayscale(100%) contrast(1.06);
-            transform: scale(1.015);
-            transition: filter 0.65s var(--ease-silky), transform 0.85s var(--ease-silky);
+            filter: grayscale(1);
+            transition: filter 0.45s var(--ease-silky);
         }
 
         /* 正中间放大主图 & 正在滑向中心的选中图片：100% 鲜明彩色 */
         .strip-slice.is-focused .slice-media {
-            filter: grayscale(0%) contrast(1);
-            transform: scale(1);
+            filter: grayscale(0);
         }
 
-        /* 鼠标悬浮在任意黑白切片上：纯 CSS 驱动平稳变成彩色，不触发任何结束态切换跳动 */
+        /* 鼠标悬浮在任意黑白切片上：纯 CSS 驱动平稳变成彩色 */
         .strip-slice:hover .slice-media {
-            filter: grayscale(0%) contrast(1.01);
+            filter: grayscale(0);
         }
 
         /* === 底部图注区（在切片扩散完成后浮现 + 丝滑翻牌切换） === */
@@ -717,16 +710,22 @@
         .grid-card-img-box {
             position: relative;
             width: 100%;
+            min-height: 140px;
             height: auto;
             overflow: hidden;
             background: #f6f6f6;
             line-height: 0;
+        }
+        .grid-card-img-box.img-loaded {
+            min-height: 0;
+            background: transparent;
         }
         .grid-card-img-box img {
             width: 100%;
             height: auto;
             display: block;
             transition: transform 0.72s var(--ease-silky);
+            -webkit-transform: translateZ(0);
         }
         .grid-card:hover .grid-card-img-box img {
             transform: scale(1.035);
@@ -758,21 +757,20 @@
             inset: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            background: rgba(255, 255, 255, 0.985);
             z-index: 2000;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
             overflow-y: auto;
             color: var(--text-main);
             -ms-overflow-style: none;
             scrollbar-width: none;
-            will-change: opacity;
         }
         .detail-modal::-webkit-scrollbar { display: none; }
         .detail-modal.show {
             opacity: 1;
+            visibility: visible;
             pointer-events: auto;
         }
 
@@ -977,12 +975,10 @@
             width: auto;
             overflow: hidden;
             opacity: 0;
-            filter: grayscale(100%);
-            clip-path: inset(0% 0% 100% 0%);
-            transition: filter 0.38s var(--ease-silky), border-color 0.38s var(--ease-silky);
+            filter: grayscale(1);
+            transition: filter 0.35s var(--ease-silky), border-color 0.35s var(--ease-silky);
             flex-shrink: 0;
             border: 1px solid transparent;
-            will-change: transform, opacity, clip-path;
         }
         .filmstrip-thumb img {
             height: 100%;
@@ -1024,17 +1020,16 @@
         /* === 单图极致放大模态框 === */
         .zoom-modal {
             display: flex; position: fixed; inset: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(255, 255, 255, 0.99);
             z-index: 3000;
             justify-content: center; align-items: center;
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
-            will-change: opacity;
         }
         .zoom-modal.show {
             opacity: 1;
+            visibility: visible;
             pointer-events: auto;
         }
         .zoom-modal img {
@@ -1100,22 +1095,21 @@
             }
 
             .hero-section {
-                min-height: calc(100vh + 120px);
-                min-height: calc(100lvh + env(safe-area-inset-bottom, 0px) + 56px);
-                height: calc(100lvh + env(safe-area-inset-bottom, 0px) + 56px);
-                padding: 0 5vw calc(84px + env(safe-area-inset-bottom, 0px));
-                margin-bottom: 64px;
+                min-height: 100dvh;
+                height: 100lvh;
+                padding: 0 5vw 24px;
+                margin-bottom: 0;
             }
-            .hero-layout { gap: 0; margin-top: 2vh; }
+            .hero-layout { gap: 0; margin-top: 0; }
             .hero-meta { display: none; } 
-            .hero-image-wrapper { max-width: 85vw; height: 50vh; }
+            .hero-image-wrapper { max-width: 86vw; height: 54vh; }
             .scroll-icon {
-                bottom: calc(108px + env(safe-area-inset-bottom, 0px));
+                bottom: calc(74px + env(safe-area-inset-bottom, 0px));
             }
 
             .archive-showcase-section {
                 min-height: auto;
-                padding: 40px 0 60px;
+                padding: 12px 0 48px;
             }
 
             .showcase-toolbar {
@@ -1545,6 +1539,35 @@
                 }
             ];
 
+            // Safari 图像兼容与显存优化辅助函数：
+            // 1. 针对阿里云 OSS 超大原图（部分达 3000万~4500万像素或特殊色彩空间/渐进式编码，易触发 iOS/macOS Safari 单图解码上限或显存耗尽导致白块），
+            //    自动生成标准 sRGB、自适应旋转且分辨率合理的优化链接；
+            // 2. 同时绑定 onerror 自动回退至原始链接，确保 100% 兼容且永不裂图！
+            function getSafariSafeUrl(rawUrl, maxEdge = 1400) {
+                if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+                if (rawUrl.includes('aliyuncs.com') && !rawUrl.includes('x-oss-process')) {
+                    return `${rawUrl}?x-oss-process=image/resize,l_${maxEdge},limit_1/auto-orient,1/quality,q_86/format,jpg`;
+                }
+                return rawUrl;
+            }
+
+            function bindSafariSafeImg(imgEl, rawUrl, maxEdge = 1400, onLoadedCallback = null) {
+                if (!imgEl || !rawUrl) return;
+                const optimizedUrl = getSafariSafeUrl(rawUrl, maxEdge);
+                let triedRawFallback = false;
+
+                imgEl.onload = () => {
+                    if (typeof onLoadedCallback === 'function') onLoadedCallback(imgEl);
+                };
+                imgEl.onerror = () => {
+                    if (!triedRawFallback && imgEl.src !== rawUrl) {
+                        triedRawFallback = true;
+                        imgEl.src = rawUrl;
+                    }
+                };
+                imgEl.src = optimizedUrl;
+            }
+
             // 展平为 33 张独立摄影作品
             const allFrames = [];
             seriesDatabase.forEach((series) => {
@@ -1560,6 +1583,8 @@
                         location: series.location,
                         story: series.story,
                         src: imgUrl,
+                        thumbUrl: getSafariSafeUrl(imgUrl, 960),
+                        stageUrl: getSafariSafeUrl(imgUrl, 2000),
                         idxInSeries: idxInSeries,
                         seriesTotal: series.images.length,
                         aspectRatio: 1.42,
@@ -1573,17 +1598,18 @@
             const defaultCenterIndex = allFrames.findIndex(f => f.src.includes('IMG_0635.jpg'));
             const INITIAL_CENTER = defaultCenterIndex >= 0 ? defaultCenterIndex : 3;
 
-            // 首屏随机主图
+            // 首屏随机主图（使用标准路径 + Safari 安全回退加载）
             const heroImagesDatabase = [
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/2-2.jpg",
-                "https://cllli.oss-cn-beijing.aliyuncs.com/img/IMG_0587.jpg",
+                "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/mmexport1733843016972~2_Original.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0175.jpg"
             ];
             const heroImgMain = document.getElementById('hero-img-main');
             if (heroImgMain) {
-                heroImgMain.src = heroImagesDatabase[Math.floor(Math.random() * heroImagesDatabase.length)];
+                const chosenHeroUrl = heroImagesDatabase[Math.floor(Math.random() * heroImagesDatabase.length)];
+                bindSafariSafeImg(heroImgMain, chosenHeroUrl, 1800);
             }
 
             const scrollBtn = document.getElementById('scroll-to-archive');
@@ -1676,6 +1702,20 @@
             let mouseX = -100, mouseY = -100, cursorX = -100, cursorY = -100, cursorVisible = false;
 
             if (!isTouchDevice) {
+                let cursorRafId = null;
+                const renderCursor = () => {
+                    const dx = mouseX - cursorX;
+                    const dy = mouseY - cursorY;
+                    cursorX += dx * 0.48;
+                    cursorY += dy * 0.48;
+                    cursor.style.transform = `translate3d(${cursorX.toFixed(1)}px, ${cursorY.toFixed(1)}px, 0) translate(-50%, -50%)`;
+                    if (Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15) {
+                        cursorRafId = requestAnimationFrame(renderCursor);
+                    } else {
+                        cursorRafId = null;
+                    }
+                };
+
                 document.addEventListener('mousemove', (e) => {
                     mouseX = e.clientX; mouseY = e.clientY;
                     if (!cursorVisible) {
@@ -1683,15 +1723,10 @@
                         cursor.style.display = 'flex';
                         cursorVisible = true;
                     }
+                    if (!cursorRafId) {
+                        cursorRafId = requestAnimationFrame(renderCursor);
+                    }
                 }, { passive: true });
-
-                const renderCursor = () => {
-                    cursorX += (mouseX - cursorX) * 0.45;
-                    cursorY += (mouseY - cursorY) * 0.45;
-                    cursor.style.transform = `translate3d(${cursorX.toFixed(1)}px, ${cursorY.toFixed(1)}px, 0) translate(-50%, -50%)`;
-                    requestAnimationFrame(renderCursor);
-                };
-                requestAnimationFrame(renderCursor);
                 
                 document.addEventListener('mouseover', (e) => {
                     const sliceEl = e.target.closest('.strip-slice');
@@ -1816,39 +1851,9 @@
                 const imgEl = document.createElement('img');
                 imgEl.className = 'slice-media';
                 imgEl.alt = frame.cnTitle;
-                imgEl.decoding = 'async';
 
                 inner.appendChild(imgEl);
                 slice.appendChild(inner);
-
-                // 超清原图加载完成后自动降采样为 500p 轻量 <canvas> 节点，释放 98% 原图显存，杜绝卡顿
-                imgEl.addEventListener('load', () => {
-                    const nw = imgEl.naturalWidth || 800;
-                    const nh = imgEl.naturalHeight || 600;
-                    frame.aspectRatio = nw / nh;
-
-                    if (nh > 650 && typeof document.createElement === 'function') {
-                        try {
-                            const targetH = 500;
-                            const targetW = Math.max(64, Math.round(targetH * frame.aspectRatio));
-                            const liteCanvas = document.createElement('canvas');
-                            liteCanvas.width = targetW;
-                            liteCanvas.height = targetH;
-                            liteCanvas.className = 'slice-media';
-                            const liteCtx = liteCanvas.getContext('2d');
-                            if (liteCtx) {
-                                liteCtx.drawImage(imgEl, 0, 0, targetW, targetH);
-                                try {
-                                    frame.previewUrl = liteCanvas.toDataURL('image/jpeg', 0.85);
-                                } catch (e) {}
-                                inner.replaceChild(liteCanvas, imgEl);
-                                sliceMediaNodes[i] = liteCanvas;
-                                imgEl.removeAttribute('src');
-                            }
-                        } catch (err) {}
-                    }
-                    wakeUpStripEngine();
-                });
 
                 slice.addEventListener('mouseenter', () => {
                     if (isTouchDevice || !cursorLabel) return;
@@ -1880,21 +1885,30 @@
                 frame.loaded = true;
                 const mediaNode = sliceMediaNodes[normIdx];
                 if (mediaNode && mediaNode.tagName === 'IMG') {
-                    mediaNode.src = frame.src;
+                    bindSafariSafeImg(mediaNode, frame.src, 1100, (loadedImg) => {
+                        const nw = loadedImg.naturalWidth || 800;
+                        const nh = loadedImg.naturalHeight || 600;
+                        if (nw > 0 && nh > 0) {
+                            frame.aspectRatio = nw / nh;
+                        }
+                        wakeUpStripEngine();
+                    });
                 }
             }
 
-            // 预加载中心视野附近的切片
+            // 预加载中心视野附近的切片（由中心向两侧对称加载）
             if (!isMobileView()) {
-                for (let offset = -8; offset <= 8; offset++) {
-                    ensureSliceLoaded(INITIAL_CENTER + offset);
+                ensureSliceLoaded(INITIAL_CENTER);
+                for (let step = 1; step <= 10; step++) {
+                    ensureSliceLoaded(INITIAL_CENTER + step);
+                    ensureSliceLoaded(INITIAL_CENTER - step);
                 }
             }
 
             function startBackgroundSliceLoader() {
                 if (isMobileView()) return;
                 const queue = [];
-                for (let step = 9; step <= Math.ceil(N / 2); step++) {
+                for (let step = 11; step <= Math.ceil(N / 2); step++) {
                     queue.push(INITIAL_CENTER + step);
                     queue.push(INITIAL_CENTER - step);
                 }
@@ -1902,7 +1916,7 @@
                 const loadNext = () => {
                     if (ptr >= queue.length) return;
                     ensureSliceLoaded(queue[ptr++]);
-                    setTimeout(loadNext, 75);
+                    setTimeout(loadNext, 60);
                 };
                 loadNext();
             }
@@ -2268,19 +2282,34 @@
                 for (let k = 0; k < N; k++) {
                     const item = orderedItems[k];
                     const slice = sliceElements[item.i];
-                    slice.style.order = String(k);
+                    const frame = allFrames[item.i];
+
+                    if (frame._lastOrder !== k) {
+                        frame._lastOrder = k;
+                        slice.style.order = String(k);
+                    }
 
                     if (item.edgeTaper <= 0.0001 && item.peak <= 0) {
-                        slice.style.flexGrow = '0';
-                        slice.style.margin = '0 0px';
-                        slice.style.opacity = '0';
-                        slice.style.pointerEvents = 'none';
-                        slice.classList.remove('is-focused');
+                        if (frame._lastVisible !== false) {
+                            frame._lastVisible = false;
+                            frame._lastFlex = '0';
+                            slice.style.flexGrow = '0';
+                            slice.style.margin = '0';
+                            slice.style.opacity = '0';
+                            slice.style.pointerEvents = 'none';
+                        }
+                        if (frame._lastFocused) {
+                            frame._lastFocused = false;
+                            slice.classList.remove('is-focused');
+                        }
                         continue;
                     }
 
-                    slice.style.opacity = '1';
-                    slice.style.pointerEvents = 'auto';
+                    if (frame._lastVisible !== true) {
+                        frame._lastVisible = true;
+                        slice.style.opacity = '1';
+                        slice.style.pointerEvents = 'auto';
+                    }
 
                     const sidePx = totalSideWeightSum > 0.0001
                         ? (item.sideWeight / totalSideWeightSum) * totalSideSpace
@@ -2289,27 +2318,46 @@
                     const targetAccordionW = Math.max(0, item.peak * item.natW + sidePx);
                     const currentW = uniformSliceW * (1 - morphToAccordion) + targetAccordionW * morphToAccordion;
 
-                    // 计算当前切片在阶段一中的自上而下垂落高度百分比 (由中间 ad=0 向两侧 ad=HALF_WINDOW 扩散)
-                    const normDist = Math.min(1, item.ad / HALF_WINDOW);
-                    const startThreshold = normDist * 0.62;
-                    const dropDuration = 0.38;
-                    const rawDrop = hasTriggeredEntrance
-                        ? Math.max(0, Math.min(1, (cascadePhaseT - startThreshold) / dropDuration))
-                        : 0;
-                    const easeDrop = 1 - Math.pow(1 - rawDrop, 2.4);
-                    const bottomClipPct = ((1 - easeDrop) * 100).toFixed(2);
+                    // 计算当前切片在阶段一中的自上而下垂落高度百分比 (使用 GPU translate3d 代替高开销的 clip-path)
+                    let nextTransform = 'translate3d(0, 0%, 0)';
+                    if (cascadePhaseT < 1.0) {
+                        const normDist = Math.min(1, item.ad / HALF_WINDOW);
+                        const startThreshold = normDist * 0.62;
+                        const dropDuration = 0.38;
+                        const rawDrop = hasTriggeredEntrance
+                            ? Math.max(0, Math.min(1, (cascadePhaseT - startThreshold) / dropDuration))
+                            : 0;
+                        const easeDrop = 1 - Math.pow(1 - rawDrop, 2.4);
+                        if (easeDrop < 0.998) {
+                            const yOffsetPct = -((1 - easeDrop) * 100);
+                            nextTransform = `translate3d(0, ${yOffsetPct.toFixed(2)}%, 0)`;
+                        }
+                    }
 
-                    slice.style.flexGrow = currentW.toFixed(3);
-                    const horizMargin = item.edgeTaper < 0.15 ? (item.edgeTaper / 0.15).toFixed(2) : '1';
-                    slice.style.margin = `0 ${horizMargin}px`;
-                    slice.style.clipPath = easeDrop >= 0.998 ? 'none' : `inset(0% 0% ${bottomClipPct}% 0%)`;
+                    const flexStr = currentW.toFixed(1);
+                    if (frame._lastFlex !== flexStr) {
+                        frame._lastFlex = flexStr;
+                        slice.style.flexGrow = flexStr;
+                    }
 
-                    // 统一使用单一 .is-focused 类：
-                    // 点击目标切片滑向中心时，该切片从点击瞬间到抵达中心全程保持 .is-focused = true，结束帧无任何类名切换！
+                    const horizMargin = item.edgeTaper < 0.15 ? '0.5px' : '1px';
+                    if (frame._lastMargin !== horizMargin) {
+                        frame._lastMargin = horizMargin;
+                        slice.style.margin = `0 ${horizMargin}`;
+                    }
+
+                    if (frame._lastTransform !== nextTransform) {
+                        frame._lastTransform = nextTransform;
+                        slice.style.transform = nextTransform;
+                    }
+
                     const isFocused = morphToAccordion > 0.35 && (
                         isAnimatingTrack ? (item.i === glidingTargetIdx || item.ad < 0.35) : (item.ad < 0.48)
                     );
-                    slice.classList.toggle('is-focused', isFocused);
+                    if (frame._lastFocused !== isFocused) {
+                        frame._lastFocused = isFocused;
+                        slice.classList.toggle('is-focused', isFocused);
+                    }
                 }
 
                 if (needsNextFrame) {
@@ -2366,7 +2414,7 @@
                     const numStr = String(frame.globalIndex + 1).padStart(2, '0');
                     card.innerHTML = `
                         <div class="grid-card-img-box">
-                            <img src="${frame.src}" alt="${frame.cnTitle} ${numStr}" loading="lazy" decoding="async">
+                            <img alt="${frame.cnTitle} ${numStr}">
                         </div>
                         <div class="grid-card-meta">
                             <span class="card-idx">${numStr} · ${frame.cnTitle}</span>
@@ -2374,6 +2422,19 @@
                         </div>
                     `;
                     const imgBox = card.querySelector('.grid-card-img-box');
+                    const gridImg = card.querySelector('img');
+                    // 错峰加载瀑布流图片并自动启用 Safari 安全分辨率与原始链接回退，彻底杜绝 Safari 懒加载死锁与显存溢出
+                    setTimeout(() => {
+                        bindSafariSafeImg(gridImg, frame.src, isMobileView() ? 960 : 1200, (loadedImg) => {
+                            imgBox.classList.add('img-loaded');
+                            const nw = loadedImg.naturalWidth || 800;
+                            const nh = loadedImg.naturalHeight || 600;
+                            if (nw > 0 && nh > 0) {
+                                frame.aspectRatio = nw / nh;
+                            }
+                        });
+                    }, Math.min(600, idx * 35));
+
                     card.addEventListener('click', () => {
                         openDetailModal(frame.seriesId, frame.idxInSeries, imgBox || card);
                     });
@@ -2517,31 +2578,12 @@
                 }
             }
 
-            // 辅助函数：将指定 URL 无感加载解码后赋给目标 <img>
+            // 辅助函数：将指定 URL 通过 Safari 安全分辨率与自动回退机制赋给放大舞台 <img>
             function setStageImageSeamless(seriesId, photoIdx, fullUrl) {
-                const frameObj = allFrames.find(f => f.seriesId === seriesId && f.idxInSeries === photoIdx);
-                if (detailStageImg.src !== fullUrl) {
-                    if (frameObj && frameObj.previewUrl) {
-                        detailStageImg.src = frameObj.previewUrl;
-                    } else {
-                        detailStageImg.src = fullUrl;
-                    }
-                }
-                const hiResLoader = new Image();
-                hiResLoader.src = fullUrl;
-                const applyFull = () => {
-                    if ((!isDetailModalOpen || (activeModalSeries && activeModalSeries.id === seriesId && activeModalPhotoIdx === photoIdx)) && detailStageImg.src !== fullUrl) {
-                        detailStageImg.src = fullUrl;
-                    }
-                };
-                if (typeof hiResLoader.decode === 'function') {
-                    hiResLoader.decode().then(applyFull).catch(applyFull);
-                } else {
-                    hiResLoader.onload = applyFull;
-                }
+                bindSafariSafeImg(detailStageImg, fullUrl, 2000);
             }
 
-            // 在用户点击之前预先构建并解码当前居中作品所属系列的 DOM 节点，彻底杜绝「初次点击」时的节点创建与图片解码阻塞！
+            // 在用户点击之前预先构建并加载当前居中作品所属系列的 DOM 节点，彻底杜绝「初次点击」时的节点创建与图片解码阻塞！
             function prewarmModalDOM(seriesId, photoIdx) {
                 const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
                 const targetUrl = series.images[photoIdx] || series.images[0];
@@ -2560,15 +2602,10 @@
                         thumb.className = 'filmstrip-thumb' + (idx === photoIdx ? ' active' : '');
                         const frameObj = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === idx);
                         const thumbAr = frameObj ? frameObj.aspectRatio : 1.42;
-                        const thumbSrc = (frameObj && frameObj.previewUrl) ? frameObj.previewUrl : url;
                         thumb.style.width = `${Math.round(68 * thumbAr)}px`;
                         const tImg = document.createElement('img');
-                        tImg.src = thumbSrc;
                         tImg.alt = `Thumbnail ${idx + 1}`;
-                        tImg.decoding = 'async';
-                        if (typeof tImg.decode === 'function') {
-                            tImg.decode().catch(() => {});
-                        }
+                        bindSafariSafeImg(tImg, url, 480);
                         thumb.appendChild(tImg);
                         thumb.addEventListener('click', (e) => {
                             e.stopPropagation();
@@ -2587,8 +2624,10 @@
                 detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
             }
 
-            // 页面初始化时立即预热默认居中作品 (IMG_0635.jpg) 的模态框 DOM 与大图解码
-            prewarmModalDOM(allFrames[INITIAL_CENTER].seriesId, allFrames[INITIAL_CENTER].idxInSeries);
+            // 页面首屏动画完成后再静默预热默认居中作品 (IMG_0635.jpg) 的模态框 DOM，确保首屏加载零竞争、极致轻快
+            setTimeout(() => {
+                prewarmModalDOM(allFrames[INITIAL_CENTER].seriesId, allFrames[INITIAL_CENTER].idxInSeries);
+            }, 1200);
 
             storyToggleBtn.addEventListener('click', () => {
                 const isOpen = storyDrawer.classList.toggle('open');
@@ -2783,17 +2822,15 @@
                         thumb.animate([
                             {
                                 opacity: 0,
-                                clipPath: 'inset(0% 0% 100% 0%)',
-                                transform: 'translate3d(0, 14px, 0)'
+                                transform: 'translate3d(0, 18px, 0) scaleY(0.4)'
                             },
                             {
                                 opacity: isAct ? 1 : 0.45,
-                                clipPath: 'inset(0% 0% 0% 0%)',
-                                transform: isAct ? 'translate3d(0, -3px, 0)' : 'translate3d(0, 0px, 0)'
+                                transform: isAct ? 'translate3d(0, -3px, 0) scaleY(1)' : 'translate3d(0, 0px, 0) scaleY(1)'
                             }
                         ], {
-                            duration: 760,
-                            delay: 260 + dist * 65,
+                            duration: 720,
+                            delay: 240 + dist * 55,
                             easing: SILKY_EASE,
                             fill: 'both'
                         });
