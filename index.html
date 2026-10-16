@@ -842,42 +842,6 @@
             text-transform: uppercase;
         }
 
-        .story-toggle-btn {
-            background: none;
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 5px 14px;
-            font-family: var(--font-sans);
-            font-size: 9px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--text-sub);
-            transition: all 0.3s var(--ease-silky);
-        }
-        .story-toggle-btn:hover, .story-toggle-btn.active {
-            border-color: var(--text-main);
-            color: var(--text-main);
-        }
-
-        .detail-story-drawer {
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.52s var(--ease-silky), opacity 0.42s var(--ease-silky), margin 0.42s var(--ease-silky);
-            max-width: 780px;
-        }
-        .detail-story-drawer.open {
-            max-height: 160px;
-            opacity: 1;
-            margin-top: 16px;
-        }
-        .detail-story-drawer p {
-            font-size: 12px;
-            font-weight: 300;
-            line-height: 2;
-            color: #666;
-        }
-
         .detail-stage-area {
             position: relative;
             flex: 1;
@@ -888,7 +852,7 @@
             min-height: 56vh;
         }
         .detail-stage-img {
-            max-width: 78vw;
+            max-width: 86vw;
             max-height: 64vh;
             width: auto;
             height: auto;
@@ -896,60 +860,6 @@
             box-shadow: 0 28px 68px rgba(0, 0, 0, 0.08);
             transform-origin: center center;
             will-change: transform, opacity;
-        }
-
-        /* 舞台左右两侧由中心向外缓缓浮现的切换箭头与竖向装饰线 */
-        .detail-side-nav {
-            position: absolute;
-            top: 50%;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            padding: 12px;
-            opacity: 0;
-            z-index: 5;
-            will-change: transform, opacity;
-        }
-        .detail-side-nav.prev {
-            left: 0;
-            transform: translate(22px, -50%);
-        }
-        .detail-side-nav.next {
-            right: 0;
-            transform: translate(-22px, -50%);
-        }
-        .detail-side-nav .nav-circle {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid var(--border-color);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.35s var(--ease-silky);
-        }
-        .detail-side-nav .nav-line {
-            width: 22px;
-            height: 1px;
-            background-color: var(--border-color);
-            transition: width 0.35s var(--ease-silky), background-color 0.35s var(--ease-silky);
-        }
-        .detail-side-nav:hover .nav-circle {
-            border-color: var(--text-main);
-            background-color: var(--text-main);
-            color: #ffffff;
-            transform: scale(1.06);
-        }
-        .detail-side-nav:hover .nav-line {
-            width: 32px;
-            background-color: var(--text-main);
-        }
-        .detail-side-nav svg {
-            width: 14px;
-            height: 14px;
         }
 
         /* 底部胶片栏：由 Web Animations API (fill: 'both') 驱动缩略图由中间向两侧呈阶梯垂落展开 */
@@ -1422,7 +1332,7 @@
         <div class="footer-right">DESIGNED & PHOTOGRAPHED BY XIANG</div>
     </footer>
 
-    <!-- 沉浸式组图模态框：中央主图 FLIP 丝滑展开 + 四周元素（顶栏、两侧导览、底部胶片阶梯）由中心向外缓缓浮现 -->
+    <!-- 沉浸式组图模态框：中央主图 FLIP 丝滑展开 + 四周元素（顶栏、底部胶片阶梯、右上关闭按钮）由中心向外缓缓浮现 -->
     <div class="detail-modal" id="detail-modal" aria-hidden="true">
         <button class="minimal-close-btn" id="modal-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <div class="detail-content-wrapper">
@@ -1433,36 +1343,12 @@
                         <h2 id="detail-title">Project Title</h2>
                         <span class="detail-meta" id="detail-meta">2023 / DALIAN</span>
                     </div>
-                    <button class="story-toggle-btn" id="story-toggle-btn">+ STORY NOTE</button>
-                </div>
-                <div class="detail-story-drawer" id="detail-story-drawer">
-                    <p id="detail-story-text"></p>
                 </div>
                 <div class="detail-header-line"></div>
             </div>
 
             <div class="detail-stage-area" id="detail-stage-area">
-                <button class="detail-side-nav prev" id="detail-prev-btn" aria-label="Previous Frame">
-                    <span class="nav-circle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                    </span>
-                    <span class="nav-line"></span>
-                </button>
-
                 <img class="detail-stage-img" id="detail-stage-img" alt="Selected Photograph">
-
-                <button class="detail-side-nav next" id="detail-next-btn" aria-label="Next Frame">
-                    <span class="nav-line"></span>
-                    <span class="nav-circle">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                            <polyline points="12 5 19 12 12 19"></polyline>
-                        </svg>
-                    </span>
-                </button>
             </div>
 
             <div class="detail-filmstrip-bar">
@@ -2692,10 +2578,6 @@
             const detailFilmstripTrack = document.getElementById('detail-filmstrip-track');
             const detailFilmstripCounter = document.getElementById('detail-filmstrip-counter');
             const desktopCloseBtn = document.getElementById('modal-close');
-            const detailPrevBtn = document.getElementById('detail-prev-btn');
-            const detailNextBtn = document.getElementById('detail-next-btn');
-            const storyToggleBtn = document.getElementById('story-toggle-btn');
-            const storyDrawer = document.getElementById('detail-story-drawer');
             const SILKY_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
             let prewarmedSeriesId = -1;
@@ -2722,7 +2604,6 @@
                     document.getElementById('detail-badge').textContent = `SERIES ${series.code}`;
                     document.getElementById('detail-title').textContent = series.fullTitle;
                     document.getElementById('detail-meta').textContent = `${series.year} / ${series.location}`;
-                    document.getElementById('detail-story-text').textContent = series.story;
 
                     detailFilmstripTrack.innerHTML = '';
                     series.images.forEach((url, idx) => {
@@ -2757,11 +2638,7 @@
                 prewarmModalDOM(allFrames[INITIAL_CENTER].seriesId, allFrames[INITIAL_CENTER].idxInSeries);
             }, 1200);
 
-            storyToggleBtn.addEventListener('click', () => {
-                const isOpen = storyDrawer.classList.toggle('open');
-                storyToggleBtn.classList.toggle('active', isOpen);
-                storyToggleBtn.textContent = isOpen ? '− HIDE NOTE' : '+ STORY NOTE';
-            });
+
 
             function updateModalStagePhoto(newIdx) {
                 if (!activeModalSeries) return;
@@ -2800,18 +2677,7 @@
                 });
             }
 
-            if (detailPrevBtn) {
-                detailPrevBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    updateModalStagePhoto(activeModalPhotoIdx - 1);
-                });
-            }
-            if (detailNextBtn) {
-                detailNextBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    updateModalStagePhoto(activeModalPhotoIdx + 1);
-                });
-            }
+
 
             // 大屏与移动端触摸增强：在检视模态框舞台区支持「左右跟手滑动切图」与「向下拖拽优雅关闭返回画廊」
             let modalTouchStartX = 0;
@@ -2901,9 +2767,7 @@
                 // 2. 复用已预热的模态框 DOM（若从瀑布流点击了其他系列则即时同步），避免初次点击时重建 DOM 导致丢帧
                 prewarmModalDOM(series.id, initialPhotoIdx);
 
-                storyDrawer.classList.remove('open');
-                storyToggleBtn.classList.remove('active');
-                storyToggleBtn.textContent = '+ STORY NOTE';
+
 
                 const thumbNodes = Array.from(detailFilmstripTrack.children);
                 thumbNodes.forEach((thumb, idx) => {
@@ -2925,7 +2789,7 @@
                 const ar = matchingFrame ? matchingFrame.aspectRatio : 1.42;
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const maxStageW = vw * (isMobileView() ? 0.92 : 0.78);
+                const maxStageW = vw * (isMobileView() ? 0.92 : 0.86);
                 const maxStageH = vh * (isMobileView() ? 0.52 : 0.64);
                 const estTargetW = Math.min(maxStageW, maxStageH * ar);
                 const estTargetH = estTargetW / ar;
@@ -2945,7 +2809,7 @@
 
                 // 4. 使用 Web Animations API + fill: 'both'（保证在 delay 期间严格锁定第 0 帧隐藏状态，绝不闪现！），初次点击 100% 丝滑！
                 if (typeof detailModal.animate === 'function') {
-                    [detailModal, detailStageImg, detailHeaderBlock, detailHeaderLine, detailPrevBtn, detailNextBtn, desktopCloseBtn, detailFilmstripCounter, ...thumbNodes].forEach(cancelAnims);
+                    [detailModal, detailStageImg, detailHeaderBlock, detailHeaderLine, desktopCloseBtn, detailFilmstripCounter, ...thumbNodes].forEach(cancelAnims);
 
                     // (a) 背景柔光遮罩渐显
                     detailModal.animate([
@@ -2971,20 +2835,6 @@
                             { transform: 'scaleX(0)' },
                             { transform: 'scaleX(1)' }
                         ], { duration: 920, delay: 260, easing: SILKY_EASE, fill: 'both' });
-                    }
-
-                    // (d) 左右两侧：导览按钮从靠近中心图片两侧缓缓向外舒展浮现
-                    if (detailPrevBtn && !isMobileView()) {
-                        detailPrevBtn.animate([
-                            { opacity: 0, transform: 'translate(22px, -50%)' },
-                            { opacity: 1, transform: 'translate(0px, -50%)' }
-                        ], { duration: 800, delay: 280, easing: SILKY_EASE, fill: 'both' });
-                    }
-                    if (detailNextBtn && !isMobileView()) {
-                        detailNextBtn.animate([
-                            { opacity: 0, transform: 'translate(-22px, -50%)' },
-                            { opacity: 1, transform: 'translate(0px, -50%)' }
-                        ], { duration: 800, delay: 280, easing: SILKY_EASE, fill: 'both' });
                     }
 
                     // (e) 右上角：关闭按钮柔和浮现
@@ -3051,11 +2901,7 @@
                             el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
                         }
                     });
-                    [detailPrevBtn, detailNextBtn].forEach(el => {
-                        if (el && !isMobileView()) {
-                            el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
-                        }
-                    });
+
                     Array.from(detailFilmstripTrack.children).forEach((thumb) => {
                         thumb.animate([{ opacity: 0.5 }, { opacity: 0 }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
                     });
