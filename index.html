@@ -202,15 +202,20 @@
             body, a, button, img, canvas, .strip-slice, .grid-card { cursor: auto !important; }
         }
 
-        /* === 顶栏导航 (原版样式) === */
+        /* === 顶栏导航 (原版样式 + 滚动防重叠保护) === */
         .site-header {
             position: fixed; top: 0; left: 0; width: 100%;
-            padding: 40px 6vw;
+            padding: 36px 6vw;
             display: flex; justify-content: space-between; align-items: center;
             z-index: 100;
-            background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(to bottom, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.85) 70%, rgba(255,255,255,0) 100%);
             pointer-events: none; 
-            transition: background 0.4s var(--ease-silky), backdrop-filter 0.4s var(--ease-silky);
+            transition: padding 0.4s var(--ease-silky), background 0.4s var(--ease-silky);
+        }
+        .site-header.header-scrolled {
+            padding: 20px 6vw;
+            background: rgba(255, 255, 255, 0.96);
+            border-bottom: 1px solid rgba(226, 226, 226, 0.55);
         }
         .header-logo, .header-nav, .menu-btn { pointer-events: auto; }
 
@@ -318,8 +323,8 @@
         .archive-showcase-section {
             position: relative;
             width: 100vw;
-            min-height: 92vh;
-            padding: 48px 0 60px;
+            min-height: 100svh;
+            padding: 104px 0 52px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -331,7 +336,7 @@
             opacity: 0.22;
         }
 
-        /* 顶部轻量控制栏 */
+        /* 顶部轻量控制栏 (预留顶栏安全高度，且在深滚靠近顶栏时平滑隐去，彻底杜绝与顶栏重叠) */
         .showcase-toolbar {
             width: 100%;
             padding: 0 6vw;
@@ -347,6 +352,12 @@
         .archive-showcase-section.entered .showcase-toolbar {
             opacity: 1;
             transform: translateY(0);
+            transition: opacity 0.32s var(--ease-silky), transform 0.32s var(--ease-silky);
+        }
+        .archive-showcase-section.entered .showcase-toolbar.under-header {
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
         }
 
         .series-filter-bar {
@@ -1089,7 +1100,8 @@
                一旦用户向下滑动 (> 10px)，第二屏立即原位丝滑浮现，且第一屏与第二屏之间 0 多余空隙！ */
             .archive-showcase-section {
                 min-height: auto;
-                padding: 16px 0 48px;
+                padding: 82px 0 48px;
+                scroll-margin-top: 12px;
                 opacity: 0;
                 transform: translate3d(0, 16px, 0);
                 pointer-events: none;
@@ -1548,8 +1560,9 @@
                         location: series.location,
                         story: series.story,
                         src: imgUrl,
-                        thumbUrl: getSafariSafeUrl(imgUrl, 960),
-                        stageUrl: getSafariSafeUrl(imgUrl, 2000),
+                        thumbUrl: getSafariSafeUrl(imgUrl, 600),
+                        displayUrl: getSafariSafeUrl(imgUrl, 1500),
+                        stageUrl: getSafariSafeUrl(imgUrl, 1500),
                         idxInSeries: idxInSeries,
                         seriesTotal: series.images.length,
                         aspectRatio: 1.42,
@@ -1860,7 +1873,7 @@
                 frame.loaded = true;
                 const mediaNode = sliceMediaNodes[normIdx];
                 if (mediaNode && mediaNode.tagName === 'IMG') {
-                    bindSafariSafeImg(mediaNode, frame.src, 1100, (loadedImg) => {
+                    bindSafariSafeImg(mediaNode, frame.src, 1500, (loadedImg) => {
                         const nw = loadedImg.naturalWidth || 800;
                         const nh = loadedImg.naturalHeight || 600;
                         if (nw > 0 && nh > 0) {
@@ -1925,19 +1938,31 @@
             }, { threshold: 0.35 });
             stripObserver.observe(stripContainer);
 
-            // 移动端 Safari 防露底与零空隙滚动监听：在首屏顶部 (scrollY <= 10) 时严格隐藏第二屏，一旦向下滚动立即丝滑显影
-            const handleMobileArchiveReveal = () => {
-                if (!isMobileView()) return;
-                if (window.scrollY > 10) {
-                    if (!archiveSection.classList.contains('entered')) {
-                        archiveSection.classList.add('entered');
+            // 顶栏与画廊工具栏防重叠监听 + 移动端首屏防露底控制
+            const showcaseToolbarEl = document.querySelector('.showcase-toolbar');
+            const headerEl = document.getElementById('site-header');
+            const handleScrollLayoutSync = () => {
+                const sy = window.scrollY || window.pageYOffset || 0;
+                if (headerEl) {
+                    headerEl.classList.toggle('header-scrolled', sy > 36);
+                }
+                if (showcaseToolbarEl && archiveSection.classList.contains('entered')) {
+                    const tbRect = showcaseToolbarEl.getBoundingClientRect();
+                    const headerBottom = isMobileView() ? 68 : 74;
+                    showcaseToolbarEl.classList.toggle('under-header', tbRect.top < headerBottom && tbRect.bottom > 0);
+                }
+                if (isMobileView()) {
+                    if (sy > 10) {
+                        if (!archiveSection.classList.contains('entered')) {
+                            archiveSection.classList.add('entered');
+                        }
+                        if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
+                    } else if (sy <= 2) {
+                        archiveSection.classList.remove('entered');
                     }
-                    if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
-                } else if (window.scrollY <= 2) {
-                    archiveSection.classList.remove('entered');
                 }
             };
-            window.addEventListener('scroll', handleMobileArchiveReveal, { passive: true });
+            window.addEventListener('scroll', handleScrollLayoutSync, { passive: true });
 
             // 垂直滚轮 100% 留给页面自然上下滚动；仅在横向滑动或按住 Shift 时横向拨动切片
             let wheelSnapTimer = null;
@@ -2439,7 +2464,7 @@
                     const gridImg = card.querySelector('img');
                     // 错峰加载瀑布流图片并自动启用 Safari 安全分辨率与原始链接回退，彻底杜绝 Safari 懒加载死锁与显存溢出
                     setTimeout(() => {
-                        bindSafariSafeImg(gridImg, frame.src, isMobileView() ? 960 : 1200, (loadedImg) => {
+                        bindSafariSafeImg(gridImg, frame.src, 1500, (loadedImg) => {
                             imgBox.classList.add('img-loaded');
                             const nw = loadedImg.naturalWidth || 800;
                             const nh = loadedImg.naturalHeight || 600;
@@ -2581,6 +2606,8 @@
             const SILKY_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
             let prewarmedSeriesId = -1;
+            const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            detailStageImg.src = BLANK_PIXEL;
 
             function cancelAnims(el) {
                 if (el && typeof el.getAnimations === 'function') {
@@ -2588,16 +2615,29 @@
                 }
             }
 
-            // 辅助函数：将指定 URL 通过 Safari 安全分辨率与自动回退机制赋给放大舞台 <img>
-            function setStageImageSeamless(seriesId, photoIdx, fullUrl) {
-                bindSafariSafeImg(detailStageImg, fullUrl, 2000);
+            // 辅助函数：切换舞台主图时，先用空白像素清除旧图残留或直接复用已加载的相同 URL（1500px），彻底杜绝闪烁上一张预览图！
+            function setStageImageSeamless(seriesId, photoIdx, fullUrl,alreadyLoadedSrc = null) {
+                const targetSafeUrl = getSafariSafeUrl(fullUrl, 1500);
+                const desiredSrc = alreadyLoadedSrc || targetSafeUrl;
+                if (detailStageImg.src !== desiredSrc) {
+                    // 先立即清除旧图位图缓存，防止新图解码前闪现上一张图片
+                    detailStageImg.src = BLANK_PIXEL;
+                    bindSafariSafeImg(detailStageImg, fullUrl, 1500);
+                }
             }
 
-            // 在用户点击之前预先构建并加载当前居中作品所属系列的 DOM 节点，彻底杜绝「初次点击」时的节点创建与图片解码阻塞！
-            function prewarmModalDOM(seriesId, photoIdx) {
+            // 预构建当前系列的缩略图栏与后台图片缓存（不污染 detailStageImg 当前位图）
+            function prewarmModalDOM(seriesId, photoIdx, updateStageNow = false, clickedImgSrc = null) {
                 const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
                 const targetUrl = series.images[photoIdx] || series.images[0];
-                setStageImageSeamless(series.id, photoIdx, targetUrl);
+
+                if (updateStageNow) {
+                    setStageImageSeamless(series.id, photoIdx, targetUrl, clickedImgSrc);
+                } else {
+                    // 后台静默预热到浏览器缓存，不改动 detailStageImg.src
+                    const bgPreloader = new Image();
+                    bgPreloader.src = getSafariSafeUrl(targetUrl, 1500);
+                }
 
                 if (prewarmedSeriesId !== series.id) {
                     prewarmedSeriesId = series.id;
@@ -2761,11 +2801,13 @@
                 activeModalPhotoIdx = initialPhotoIdx;
                 lastClickedSourceEl = sourceEl || null;
 
-                // 1. 记录被点击图片在屏幕上的精确几何矩形 (FLIP 起点)
+                // 1. 记录被点击图片在屏幕上的精确几何矩形 (FLIP 起点)，并提取被点击图片已解码的真实 src
                 const sourceRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
+                const sourceImgEl = sourceEl ? (sourceEl.tagName === 'IMG' ? sourceEl : sourceEl.querySelector('img')) : null;
+                const clickedLoadedSrc = (sourceImgEl && sourceImgEl.src) ? sourceImgEl.src : null;
 
-                // 2. 复用已预热的模态框 DOM（若从瀑布流点击了其他系列则即时同步），避免初次点击时重建 DOM 导致丢帧
-                prewarmModalDOM(series.id, initialPhotoIdx);
+                // 2. 将舞台主图立即切换为被点击卡片已加载完成的图片源（0ms 命中内存缓存，绝不闪现上一张图！）
+                prewarmModalDOM(series.id, initialPhotoIdx, true, clickedLoadedSrc);
 
 
 
@@ -2920,6 +2962,7 @@
                     fadeOut.onfinish = () => {
                         if (!isDetailModalOpen) {
                             detailModal.classList.remove('show');
+                            detailStageImg.src = BLANK_PIXEL;
                         }
                     };
                 } else {
