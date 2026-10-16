@@ -513,8 +513,14 @@
             filter: grayscale(0);
         }
 
-        /* 鼠标悬浮在任意黑白切片上：纯 CSS 驱动平稳变成彩色 */
-        .strip-slice:hover .slice-media {
+        /* 仅在支持精准鼠标悬停的设备上启用 :hover 变彩，彻底避免 iPad / 触屏设备点击或滑动后残留粘滞的 hover 彩色状态 */
+        @media (hover: hover) and (pointer: fine) {
+            .strip-slice:hover .slice-media {
+                filter: grayscale(0);
+            }
+        }
+        /* 触摸设备按住侧边切片时的即时色彩预览反馈 */
+        .strip-slice.is-touch-preview .slice-media {
             filter: grayscale(0);
         }
 
@@ -1065,6 +1071,68 @@
         .site-footer a:hover { color: var(--text-main); }
 
         /* =========================================================
+           大屏触摸设备专项优化 (iPad Air / iPad Pro / 触控笔记本 / 平板横屏 > 768px)
+           - 增大触控热区至 Apple HIG 44px 标准，加入优雅微触感反馈 (:active)
+           - 优化分类栏与底部胶片栏的横向顺滑触控滚动
+        ========================================================= */
+        @media (pointer: coarse) and (min-width: 769px) {
+            .series-filter-bar {
+                gap: 20px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 4px 0;
+            }
+            .series-pill {
+                padding: 10px 4px;
+                flex-shrink: 0;
+            }
+            .view-mode-switch {
+                padding: 6px 16px;
+            }
+            .mode-btn {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+            .strip-arrow-btn {
+                width: 44px;
+                height: 44px;
+            }
+            .strip-arrow-btn:active {
+                background: var(--text-main);
+                color: #ffffff;
+                transform: scale(0.92);
+            }
+            .detail-side-nav {
+                padding: 18px;
+            }
+            .detail-side-nav .nav-circle {
+                width: 46px;
+                height: 46px;
+            }
+            .detail-side-nav:active .nav-circle {
+                background: var(--text-main);
+                color: #ffffff;
+                border-color: var(--text-main);
+                transform: scale(0.92);
+            }
+            .minimal-close-btn {
+                padding: 12px;
+            }
+            .minimal-close-btn .close-icon {
+                width: 46px;
+                height: 46px;
+            }
+            .minimal-close-btn:active .close-icon {
+                transform: scale(0.92);
+                border-color: var(--text-main);
+            }
+            .detail-filmstrip-track {
+                -webkit-overflow-scrolling: touch;
+                padding: 8px 14px;
+            }
+        }
+
+        /* =========================================================
            移动端适配：移动端仅使用 Index Grid 展示，且保持每张图片真实宽高比
         ========================================================= */
         @media (max-width: 768px) {
@@ -1095,21 +1163,32 @@
             }
 
             .hero-section {
-                min-height: 100dvh;
-                height: 100lvh;
-                padding: 0 5vw 24px;
+                min-height: 100svh;
+                height: 100svh;
+                padding: 0 5vw;
                 margin-bottom: 0;
             }
             .hero-layout { gap: 0; margin-top: 0; }
             .hero-meta { display: none; } 
-            .hero-image-wrapper { max-width: 86vw; height: 54vh; }
+            .hero-image-wrapper { max-width: 86vw; height: 54svh; }
             .scroll-icon {
-                bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+                bottom: 28px;
             }
 
+            /* 移动端初始在第一屏顶部时，第二屏保持 opacity: 0 隐藏，彻底杜绝 Safari 加载完成时地址栏下方露出第二页内容再消失的闪烁 Bug；
+               一旦用户向下滑动 (> 10px)，第二屏立即原位丝滑浮现，且第一屏与第二屏之间 0 多余空隙！ */
             .archive-showcase-section {
                 min-height: auto;
-                padding: 12px 0 48px;
+                padding: 16px 0 48px;
+                opacity: 0;
+                transform: translate3d(0, 16px, 0);
+                pointer-events: none;
+                transition: opacity 0.48s var(--ease-silky), transform 0.48s var(--ease-silky);
+            }
+            .archive-showcase-section.entered {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+                pointer-events: auto;
             }
 
             .showcase-toolbar {
@@ -1615,8 +1694,18 @@
             const scrollBtn = document.getElementById('scroll-to-archive');
             if (scrollBtn) {
                 scrollBtn.addEventListener('click', () => {
-                    document.getElementById('archive-section').scrollIntoView({ behavior: 'smooth' });
+                    const archEl = document.getElementById('archive-section');
+                    if (archEl) {
+                        archEl.classList.add('entered');
+                        archEl.scrollIntoView({ behavior: 'smooth' });
+                    }
                 });
+            }
+
+            // 触摸设备自适应提示文案
+            const stripHintEl = document.querySelector('.strip-hint-text');
+            if (stripHintEl && isTouchDevice) {
+                stripHintEl.textContent = 'SWIPE TO EXPLORE · TAP TO CENTER · TAP CENTER TO VIEW';
             }
 
             /* ==========================================
@@ -1938,6 +2027,7 @@
                         hasTriggeredEntrance = true;
                         stripObserver.unobserve(entry.target);
                         if (isMobileView()) {
+                            archiveSection.classList.add('entered');
                             if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
                         } else {
                             setTimeout(() => {
@@ -1948,6 +2038,20 @@
                 });
             }, { threshold: 0.35 });
             stripObserver.observe(stripContainer);
+
+            // 移动端 Safari 防露底与零空隙滚动监听：在首屏顶部 (scrollY <= 10) 时严格隐藏第二屏，一旦向下滚动立即丝滑显影
+            const handleMobileArchiveReveal = () => {
+                if (!isMobileView()) return;
+                if (window.scrollY > 10) {
+                    if (!archiveSection.classList.contains('entered')) {
+                        archiveSection.classList.add('entered');
+                    }
+                    if (!gridRenderedOnce) renderContactGrid(currentSeriesFilter);
+                } else if (window.scrollY <= 2) {
+                    archiveSection.classList.remove('entered');
+                }
+            };
+            window.addEventListener('scroll', handleMobileArchiveReveal, { passive: true });
 
             // 垂直滚轮 100% 留给页面自然上下滚动；仅在横向滑动或按住 Shift 时横向拨动切片
             let wheelSnapTimer = null;
@@ -2007,7 +2111,9 @@
                 setTimeout(() => { hasDraggedStrip = false; }, 45);
             });
 
-            // 触摸设备支持：在 Kinetic Strip 区域支持丝滑左右滑动切换（自动区分水平拨动与垂直页面滚动）
+            // 大屏触摸设备与通用触屏支持：
+            // 1. 轻触侧边切片即时预览彩色，松手平滑滑入中心（不残留粘滞 hover）
+            // 2. 1:1 实时跟手水平滑动，松手瞬间将手指真实释放速度 (v0) 无缝注入二阶临界阻尼方程，实现零接缝惯性滑行！
             let isTouchingStrip = false;
             let touchDirectionLocked = null; // 'horizontal' | 'vertical' | null
             let touchStartX = 0;
@@ -2015,7 +2121,15 @@
             let lastTouchX = 0;
             let lastTouchTime = 0;
             let touchStartTrackPos = 0;
-            let touchVelocity = 0;
+            let touchVelocityPerSec = 0;
+            let touchedSliceEl = null;
+
+            const clearTouchPreview = () => {
+                if (touchedSliceEl) {
+                    touchedSliceEl.classList.remove('is-touch-preview');
+                    touchedSliceEl = null;
+                }
+            };
 
             stripContainer.addEventListener('touchstart', (e) => {
                 if (entranceProgress < 0.20 || e.touches.length !== 1) return;
@@ -2028,7 +2142,14 @@
                 lastTouchX = touch.clientX;
                 lastTouchTime = performance.now();
                 touchStartTrackPos = currentTrackPos;
-                touchVelocity = 0;
+                touchVelocityPerSec = 0;
+
+                clearTouchPreview();
+                const targetSlice = e.target.closest('.strip-slice');
+                if (targetSlice) {
+                    touchedSliceEl = targetSlice;
+                    touchedSliceEl.classList.add('is-touch-preview');
+                }
             }, { passive: true });
 
             stripContainer.addEventListener('touchmove', (e) => {
@@ -2039,14 +2160,16 @@
 
                 // 智能手势方向锁定：水平位移大于垂直位移时锁定为画廊左右滑动，垂直滑动则交给浏览器自然滚屏
                 if (!touchDirectionLocked) {
-                    if (Math.abs(totalDx) > 7 && Math.abs(totalDx) > Math.abs(totalDy) * 1.1) {
+                    if (Math.abs(totalDx) > 6 && Math.abs(totalDx) > Math.abs(totalDy) * 1.08) {
                         touchDirectionLocked = 'horizontal';
                         isAnimatingTrack = false;
                         trackVelocity = 0;
                         glidingTargetIdx = -1;
+                        clearTouchPreview();
                     } else if (Math.abs(totalDy) > 10 && Math.abs(totalDy) > Math.abs(totalDx) * 1.2) {
                         touchDirectionLocked = 'vertical';
                         isTouchingStrip = false;
+                        clearTouchPreview();
                         return;
                     } else {
                         return;
@@ -2057,15 +2180,15 @@
                     if (e.cancelable) e.preventDefault();
                     hasDraggedStrip = true;
                     const now = performance.now();
-                    const dtMs = Math.max(4, now - lastTouchTime);
+                    const dtSec = Math.max(0.004, (now - lastTouchTime) / 1000);
                     const frameDx = lastTouchX - touch.clientX;
                     lastTouchX = touch.clientX;
                     lastTouchTime = now;
 
-                    // 适配触摸屏灵敏度：单次轻滑即可跨过 1~3 张切片，长距离拖拽实时跟手
-                    const sensitivity = Math.max(52, Math.min(115, window.innerWidth / 9.5));
-                    const instantVel = (frameDx / sensitivity) * (16.67 / dtMs);
-                    touchVelocity = touchVelocity * 0.35 + instantVel * 0.65;
+                    // 针对大屏触摸设备 (iPad Pro / 触屏电脑) 优化跟手灵敏度
+                    const sensitivity = Math.max(54, Math.min(105, window.innerWidth / 10.5));
+                    const instantVelPerSec = (frameDx / sensitivity) / dtSec;
+                    touchVelocityPerSec = touchVelocityPerSec * 0.32 + instantVelPerSec * 0.68;
 
                     currentTrackPos = touchStartTrackPos + (totalDx / sensitivity);
                     animTargetPos = currentTrackPos;
@@ -2074,22 +2197,27 @@
             }, { passive: false });
 
             const finishStripTouch = () => {
+                clearTouchPreview();
                 if (!isTouchingStrip) return;
                 isTouchingStrip = false;
                 if (touchDirectionLocked === 'horizontal' && hasDraggedStrip) {
+                    const staleMs = performance.now() - lastTouchTime;
+                    const releaseVel = staleMs > 90 ? 0 : Math.max(-14, Math.min(14, touchVelocityPerSec));
                     const totalDeltaTrack = currentTrackPos - touchStartTrackPos;
                     const totalPixelDx = touchStartX - lastTouchX;
                     let projectedTarget;
 
-                    // 若为轻快短滑（位移超 20px 但未满半格），顺势切换到下一张/上一张；若为长距离滑动，则按惯性速度丝滑落位
-                    if (Math.abs(totalDeltaTrack) < 0.48 && (Math.abs(totalPixelDx) > 20 || Math.abs(touchVelocity) > 0.06)) {
-                        const stepDir = totalPixelDx !== 0 ? Math.sign(totalPixelDx) : Math.sign(touchVelocity);
+                    // 若为轻快短滑（位移超 18px 但未满半格），顺势切换到下一张/上一张；若为连续滑动，则结合释放速度计算落位
+                    if (Math.abs(totalDeltaTrack) < 0.45 && (Math.abs(totalPixelDx) > 18 || Math.abs(releaseVel) > 1.2)) {
+                        const stepDir = totalPixelDx !== 0 ? Math.sign(totalPixelDx) : Math.sign(releaseVel);
                         projectedTarget = Math.round(touchStartTrackPos) + stepDir;
                     } else {
-                        const momentumOffset = Math.max(-5, Math.min(5, touchVelocity * 2.4));
+                        const momentumOffset = Math.max(-6, Math.min(6, releaseVel * 0.24));
                         projectedTarget = Math.round(currentTrackPos + momentumOffset);
                     }
 
+                    // 将手指释放瞬间的真实速度传入二阶临界阻尼引擎，实现 C1 速度连续的丝滑落位
+                    trackVelocity = releaseVel * 0.65;
                     glideToTrackPos(projectedTarget);
                     setTimeout(() => { hasDraggedStrip = false; }, 60);
                 }
@@ -2685,23 +2813,81 @@
                 });
             }
 
-            // 检视模态框内也支持触摸左右滑动切换同系列作品
+            // 大屏与移动端触摸增强：在检视模态框舞台区支持「左右跟手滑动切图」与「向下拖拽优雅关闭返回画廊」
             let modalTouchStartX = 0;
             let modalTouchStartY = 0;
+            let modalTouchAxis = null; // 'x' | 'y' | null
+            let isModalTouching = false;
+
             detailModal.addEventListener('touchstart', (e) => {
-                if (e.touches.length !== 1) return;
+                if (!isDetailModalOpen || e.touches.length !== 1) return;
+                if (e.target.closest('.detail-filmstrip-track, button')) return;
+                isModalTouching = true;
+                modalTouchAxis = null;
                 modalTouchStartX = e.touches[0].clientX;
                 modalTouchStartY = e.touches[0].clientY;
             }, { passive: true });
-            detailModal.addEventListener('touchend', (e) => {
-                if (!isDetailModalOpen || e.changedTouches.length !== 1) return;
-                if (e.target.closest('.detail-filmstrip-track')) return;
-                const dx = modalTouchStartX - e.changedTouches[0].clientX;
-                const dy = modalTouchStartY - e.changedTouches[0].clientY;
-                if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy) * 1.4) {
-                    updateModalStagePhoto(activeModalPhotoIdx + (dx > 0 ? 1 : -1));
+
+            detailModal.addEventListener('touchmove', (e) => {
+                if (!isModalTouching || !isDetailModalOpen || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - modalTouchStartX;
+                const dy = e.touches[0].clientY - modalTouchStartY;
+
+                if (!modalTouchAxis) {
+                    if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.15) {
+                        modalTouchAxis = 'x';
+                        cancelAnims(detailStageImg);
+                    } else if (dy > 12 && Math.abs(dy) > Math.abs(dx) * 1.2) {
+                        modalTouchAxis = 'y';
+                        cancelAnims(detailStageImg);
+                    } else {
+                        return;
+                    }
+                }
+
+                if (modalTouchAxis === 'x') {
+                    // 水平跟手阻尼位移预览
+                    const dampedX = dx * 0.38;
+                    detailStageImg.style.transform = `translate3d(${dampedX.toFixed(1)}px, 0px, 0) scale(0.99)`;
+                } else if (modalTouchAxis === 'y' && dy > 0) {
+                    // 垂直下拉跟手缩放预览（契合 FLIP 原位缩回设计语言）
+                    const pullScale = Math.max(0.76, 1 - dy / 900);
+                    detailStageImg.style.transform = `translate3d(${(dx * 0.25).toFixed(1)}px, ${(dy * 0.55).toFixed(1)}px, 0) scale(${pullScale.toFixed(3)})`;
                 }
             }, { passive: true });
+
+            const finishModalTouch = (e) => {
+                if (!isModalTouching || !isDetailModalOpen) return;
+                isModalTouching = false;
+                const touch = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+                if (!touch) return;
+                const dx = touch.clientX - modalTouchStartX;
+                const dy = touch.clientY - modalTouchStartY;
+
+                if (modalTouchAxis === 'x') {
+                    if (Math.abs(dx) > 40) {
+                        updateModalStagePhoto(activeModalPhotoIdx + (dx < 0 ? 1 : -1));
+                    } else if (typeof detailStageImg.animate === 'function') {
+                        detailStageImg.animate([
+                            { transform: detailStageImg.style.transform || 'translate3d(0,0,0) scale(1)' },
+                            { transform: 'translate3d(0px, 0px, 0) scale(1)' }
+                        ], { duration: 320, easing: SILKY_EASE, fill: 'both' });
+                    }
+                } else if (modalTouchAxis === 'y') {
+                    if (dy > 75) {
+                        closeDetailModal();
+                    } else if (typeof detailStageImg.animate === 'function') {
+                        detailStageImg.animate([
+                            { transform: detailStageImg.style.transform || 'translate3d(0,0,0) scale(1)' },
+                            { transform: 'translate3d(0px, 0px, 0) scale(1)' }
+                        ], { duration: 360, easing: SILKY_EASE, fill: 'both' });
+                    }
+                }
+                modalTouchAxis = null;
+            };
+
+            detailModal.addEventListener('touchend', finishModalTouch, { passive: true });
+            detailModal.addEventListener('touchcancel', finishModalTouch, { passive: true });
 
             function openDetailModal(seriesId, initialPhotoIdx = 0, sourceEl = null) {
                 const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
