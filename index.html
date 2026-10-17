@@ -6,8 +6,10 @@
     <title>XIANGVISUALS</title>
     <!-- 1. 网站图标 (Favicon) -->
     <link rel="icon" href="https://cllli.oss-cn-beijing.aliyuncs.com/logo/logo.svg" type="image/svg+xml">
-    <!-- 2. 引入高级感字体 (非阻塞加载) -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@200;400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=swap" media="print" onload="this.media='all'">
+    <!-- 2. 预连接与高优加载高级感字体 (在全屏 Loader 期间即完成渲染，彻底消除闪烁) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@200;300;400;500&family=Noto+Serif+SC:wght@300;400;700&display=block">
     
     <!-- 延迟加载 Microsoft Clarity 以确保不影响首屏性能 -->
     <script type="text/javascript">
@@ -64,12 +66,6 @@
 
         /* =========================================================
            1. 极简建筑画框与切片流光加载动画 (Kinetic Frame & Slice Loader)
-           - 零文字，完全由契合全站视觉母题的简单几何图形构成：
-             中央 1px 极细取景画框 + 左右各 4 根由中心向两侧阶梯扩散的垂直切片线
-           - 全程由单一连续 requestAnimationFrame 时间轴驱动：
-             一阶段：9 根垂直几何线由中心向两侧自上而下丝滑垂落（呼应底部画廊倒 V 扩散）
-             二阶段：正中央细线平滑向两侧推开手风琴，舒展为一枚 1px 极简取景画框（呼应首屏画框构图）
-             三阶段：两侧切片轻盈收拢，中央画框柔和放大消融，无缝衔接首屏主图浮现
         ========================================================= */
         #page-loader {
             position: fixed;
@@ -102,7 +98,6 @@
             will-change: transform, opacity;
         }
 
-        /* 左右两侧对称排布的极细垂直几何切片线 */
         .geo-wing-slat {
             width: 1.5px;
             height: 44px;
@@ -113,7 +108,6 @@
             will-change: transform, opacity;
         }
 
-        /* 正中央可由 1.5px 细线丝滑展开为 1px 矩形取景框的几何核心 */
         .geo-center-frame {
             position: relative;
             width: 1.5px;
@@ -202,7 +196,7 @@
             body, a, button, img, canvas, .strip-slice, .grid-card { cursor: auto !important; }
         }
 
-        /* === 顶栏导航 (原版样式 + 滚动防重叠保护) === */
+        /* === 顶栏导航 === */
         .site-header {
             position: fixed; top: 0; left: 0; width: 100%;
             padding: 36px 6vw;
@@ -219,21 +213,301 @@
         }
         .header-logo, .header-nav, .menu-btn { pointer-events: auto; }
 
+        /* =========================================================
+           高定画廊级动态 Logo (黄金比例与空间留白精修版)
+           - 画框与内部 3D 对角线绑定在同一几何坐标系，四角 100% 严丝合缝
+           - 静止态为修长建筑画幅 (11.5 x 20)，悬浮态微扩为经典 2:3 摄影画幅，字标同步右移避让
+        ========================================================= */
         .header-logo {
-            font-family: var(--font-serif); font-size: 22px; font-weight: 700;
-            color: var(--text-main); text-decoration: none; letter-spacing: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            text-decoration: none;
+            color: var(--text-main);
             transition: opacity 0.4s var(--ease-silky);
         }
 
-        .header-nav { display: flex; gap: 40px; align-items: center; }
-
-        .header-nav a {
-            font-size: 11px; font-weight: 500; color: var(--text-main);
-            text-decoration: none; text-transform: uppercase; letter-spacing: 2px;
-            opacity: 0.4; transition: opacity 0.3s ease;
+        .xv-mark {
+            width: 34px;
+            height: 24px;
+            overflow: visible;
+            display: block;
+            flex-shrink: 0;
         }
 
-        .header-nav a:hover, .header-nav a.active { opacity: 1; }
+        /* 左侧 3 根手风琴切片线 (外层负责 Hover 平移缩放，内层负责入场与呼吸，互不冲突) */
+        .xv-slat-wrap {
+            transform-origin: center 12px;
+            transition: transform 0.6s var(--ease-out), opacity 0.45s ease;
+        }
+        .xv-slat {
+            stroke: var(--text-main);
+            stroke-width: 1.2;
+            transform-origin: center 12px;
+            transform: scaleY(0);
+            opacity: 0;
+        }
+        .xv-slat-1 { stroke: var(--text-muted); }
+        .xv-slat-2 { stroke: var(--text-sub); }
+        .xv-slat-3 { stroke: var(--text-main); }
+
+        /* 右侧建筑画框外层控制器 (以左侧边线 x=16 为轴心，负责 Hover 时的 2:3 黄金比例微扩) */
+        .xv-frame-hover-rig {
+            transform-origin: 16px 12px;
+            transition: transform 0.65s var(--ease-out);
+        }
+
+        /* 画框内层动画组 (负责入场手风琴展开 + 常驻微呼吸，画框与对角线同步缩放，永不脱节) */
+        .xv-frame-anim-group {
+            transform-origin: 16px 12px;
+            transform: scale(0.05, 0);
+            opacity: 0;
+        }
+
+        .xv-frame-rect {
+            stroke: var(--text-main);
+            stroke-width: 1.2;
+            fill: rgba(10, 10, 10, 0.01);
+            /* vector-effect 确保横向缩放时，1.2px 的边框粗细永远均匀不变形 */
+            vector-effect: non-scaling-stroke;
+            transition: fill 0.5s ease;
+        }
+
+        /* 画框内部 3D 空间对角线：精确锁定在画框四角 (16,2) -> (27.5,22) */
+        .xv-diag {
+            stroke: var(--text-main);
+            stroke-width: 0.85;
+            vector-effect: non-scaling-stroke;
+            stroke-dasharray: 26;
+            stroke-dashoffset: 26;
+            opacity: 0;
+            transition: stroke-dashoffset 0.65s var(--ease-out), opacity 0.5s ease;
+        }
+        .xv-diag-2 {
+            stroke: var(--text-sub);
+        }
+
+        /* 右侧字标：逐字底部遮罩上浮 + 悬停时整体向右轻盈避让 2.5px，保持绝佳留白 */
+        .xv-wordmark {
+            display: inline-flex;
+            align-items: center;
+            font-family: var(--font-serif);
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 5px;
+            line-height: 1;
+            color: var(--text-main);
+            overflow: hidden;
+            padding: 3px 0;
+            transition: transform 0.65s var(--ease-out);
+        }
+        .xv-char {
+            display: inline-block;
+            transform: translateY(115%);
+            opacity: 0;
+            transition: 
+                transform 0.9s var(--ease-out),
+                opacity 0.75s var(--ease-out),
+                margin-right 0.55s var(--ease-out);
+            transition-delay: calc(0.42s + var(--i) * 0.075s);
+        }
+
+        /* --- 当白色全屏 Loader 散开时 (body.logo-stage-play)，上演三段式机械展开 + 常驻呼吸 --- */
+        body.logo-stage-play .xv-slat-1 {
+            animation: 
+                xv-slat-drop-1 0.85s var(--ease-out) 0.05s forwards,
+                xv-slat-breathe-1 5s ease-in-out 1.4s infinite;
+        }
+        body.logo-stage-play .xv-slat-2 {
+            animation: 
+                xv-slat-drop-2 0.85s var(--ease-out) 0.16s forwards,
+                xv-slat-breathe-2 5s ease-in-out 1.7s infinite;
+        }
+        body.logo-stage-play .xv-slat-3 {
+            animation: 
+                xv-slat-drop-3 0.85s var(--ease-out) 0.27s forwards,
+                xv-slat-breathe-3 5s ease-in-out 2.0s infinite;
+        }
+
+        body.logo-stage-play .xv-frame-anim-group {
+            animation: 
+                xv-frame-unfold 1.3s var(--ease-out) 0.3s forwards,
+                xv-frame-breathe 5s ease-in-out 2.1s infinite;
+        }
+
+        body.logo-stage-play .xv-diag-1 {
+            animation: xv-diag-reveal 1.05s var(--ease-out) 0.75s forwards;
+        }
+
+        body.logo-stage-play .xv-char {
+            transform: translateY(0%);
+            opacity: 1;
+        }
+
+        /* 入场与常驻呼吸关键帧 */
+        @keyframes xv-slat-drop-1 {
+            0% { transform: scaleY(0); opacity: 0; }
+            100% { transform: scaleY(1); opacity: 0.45; }
+        }
+        @keyframes xv-slat-drop-2 {
+            0% { transform: scaleY(0); opacity: 0; }
+            100% { transform: scaleY(1); opacity: 0.72; }
+        }
+        @keyframes xv-slat-drop-3 {
+            0% { transform: scaleY(0); opacity: 0; }
+            100% { transform: scaleY(1); opacity: 0.95; }
+        }
+
+        @keyframes xv-slat-breathe-1 {
+            0%, 100% { transform: scaleY(1); opacity: 0.45; }
+            50% { transform: scaleY(0.62); opacity: 0.8; }
+        }
+        @keyframes xv-slat-breathe-2 {
+            0%, 100% { transform: scaleY(1); opacity: 0.72; }
+            50% { transform: scaleY(0.74); opacity: 0.48; }
+        }
+        @keyframes xv-slat-breathe-3 {
+            0%, 100% { transform: scaleY(1); opacity: 0.95; }
+            50% { transform: scaleY(0.82); opacity: 0.68; }
+        }
+
+        /* 画框两阶段展开：先垂落成极细竖线，再横向手风琴推开成 11.5x20 黄金比例画框 */
+        @keyframes xv-frame-unfold {
+            0% {
+                transform: scale(0.06, 0);
+                opacity: 0;
+            }
+            38% {
+                transform: scale(0.06, 1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1, 1);
+                opacity: 1;
+            }
+        }
+
+        /* 画框常驻微呼吸：极其克制的 6% 光学脉动，对角线四角完全同步跟随 */
+        @keyframes xv-frame-breathe {
+            0%, 100% { transform: scale(1, 1); }
+            50% { transform: scale(1.06, 1); }
+        }
+
+        @keyframes xv-diag-reveal {
+            0% { stroke-dashoffset: 26; opacity: 0; }
+            100% { stroke-dashoffset: 0; opacity: 0.38; }
+        }
+
+        /* --- Hover 鼠标悬停：克制优雅的 2:3 画幅微扩 + 对角 X 视锥线交汇 + 文字同步避让 --- */
+        .header-logo:hover .xv-slat-wrap-1 {
+            transform: translateX(1.5px) scaleY(0.68);
+        }
+        .header-logo:hover .xv-slat-wrap-2 {
+            transform: translateX(1px) scaleY(0.82);
+        }
+        .header-logo:hover .xv-slat-wrap-3 {
+            transform: translateX(0.4px) scaleY(0.92);
+        }
+        .header-logo:hover .xv-frame-hover-rig {
+            transform: scaleX(1.18);
+        }
+        .header-logo:hover .xv-frame-rect {
+            fill: rgba(10, 10, 10, 0.04);
+        }
+        .header-logo:hover .xv-diag-1 {
+            opacity: 0.72 !important;
+        }
+        .header-logo:hover .xv-diag-2 {
+            stroke-dashoffset: 0;
+            opacity: 0.72;
+        }
+        .header-logo:hover .xv-wordmark {
+            transform: translateX(2.5px);
+        }
+        .header-logo:hover .xv-char {
+            transition-delay: calc(var(--i) * 0.025s);
+            margin-right: 1.2px;
+        }
+
+        /* =========================================================
+           右侧导航标签：接力式错峰帘幕载入 + 1px 建筑基线微交互
+           - 与左侧 Logo 入场共享同一时间轴 (body.logo-stage-play)
+           - 1px 底部细线动效与画廊 .series-pill 设计语言 100% 统一
+        ========================================================= */
+        .header-nav {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .header-nav a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-main);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(14px);
+            transition: opacity 0.35s ease;
+        }
+
+        .header-nav a .nav-text {
+            display: inline-block;
+            transform: translateY(115%);
+            transition: transform 0.88s var(--ease-out);
+            transition-delay: calc(0.50s + var(--nav-i, 0) * 0.075s);
+        }
+
+        /* 底部 1px 极细建筑线：悬停/激活时从左向右舒展，移开时向右收起 */
+        .header-nav a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: var(--text-main);
+            transform: scaleX(0);
+            transform-origin: right center;
+            transition: transform 0.45s var(--ease-silky);
+        }
+
+        /* 当顶栏揭幕触发时：5 个标签依次从底部遮罩上浮显影 */
+        body.logo-stage-play .header-nav a {
+            opacity: 0.42;
+            transform: translateY(0);
+            transition: 
+                opacity 0.65s var(--ease-silky) calc(0.50s + var(--nav-i, 0) * 0.075s),
+                transform 0.88s var(--ease-out) calc(0.50s + var(--nav-i, 0) * 0.075s);
+        }
+        body.logo-stage-play .header-nav a .nav-text {
+            transform: translateY(0%);
+        }
+
+        /* 激活与悬停状态：切换为无延迟即时响应 */
+        body.logo-stage-play .header-nav a:hover,
+        body.logo-stage-play .header-nav a.active {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        body.logo-stage-play .header-nav a:hover::after,
+        body.logo-stage-play .header-nav a.active::after {
+            transform: scaleX(1);
+            transform-origin: left center;
+        }
+        /* 当前激活项的底部细线在入场尾段优雅展开 */
+        body.logo-stage-play .header-nav a.active::after {
+            transition: transform 0.65s var(--ease-silky) 0.88s;
+        }
+        body.logo-stage-play .header-nav a:hover::after {
+            transition: transform 0.42s var(--ease-silky) 0s;
+        }
         
         .menu-btn {
             display: none; flex-direction: column; gap: 6px;
@@ -252,7 +526,7 @@
         }
         .view-section.active { display: block; opacity: 1; }
 
-        /* === 首页：主视觉区 (紧凑衔接无多余空隙，同时适配 Safari 视口) === */
+        /* === 首页：主视觉区 === */
         .hero-section {
             min-height: 100vh;
             height: 100svh;
@@ -317,8 +591,7 @@
         }
 
         /* =========================================================
-           底部画廊区：1:1 还原截图的「顶部平齐 · 由中间向两侧阶梯垂落扩散」载入动画
-           + 临界阻尼零顿挫的「选中图片滑入中心」动效
+           底部画廊区
         ========================================================= */
         .archive-showcase-section {
             position: relative;
@@ -336,7 +609,6 @@
             opacity: 0.22;
         }
 
-        /* 顶部轻量控制栏 (预留顶栏安全高度，且在深滚靠近顶栏时平滑隐去，彻底杜绝与顶栏重叠) */
         .showcase-toolbar {
             width: 100%;
             padding: 0 6vw;
@@ -495,7 +767,6 @@
             margin: 0 1px;
             overflow: hidden;
             background-color: #efefef;
-            /* 初始未触发前完全向上收起：使用纯 GPU 硬件加速位移替代高开销的 clip-path 遮罩 */
             transform: translate3d(0, -100%, 0);
         }
 
@@ -507,7 +778,6 @@
             overflow: hidden;
         }
 
-        /* 针对 Safari 极致优化：使用单一轻量 grayscale(1) 滤镜，避免叠加多重滤镜与常驻缩放造成的 WebKit 离屏渲染卡顿 */
         .strip-slice .slice-media {
             width: 100%;
             height: 100%;
@@ -519,23 +789,20 @@
             transition: filter 0.45s var(--ease-silky);
         }
 
-        /* 正中间放大主图 & 正在滑向中心的选中图片：100% 鲜明彩色 */
         .strip-slice.is-focused .slice-media {
             filter: grayscale(0);
         }
 
-        /* 仅在支持精准鼠标悬停的设备上启用 :hover 变彩，彻底避免 iPad / 触屏设备点击或滑动后残留粘滞的 hover 彩色状态 */
         @media (hover: hover) and (pointer: fine) {
             .strip-slice:hover .slice-media {
                 filter: grayscale(0);
             }
         }
-        /* 触摸设备按住侧边切片时的即时色彩预览反馈 */
         .strip-slice.is-touch-preview .slice-media {
             filter: grayscale(0);
         }
 
-        /* === 底部图注区（在切片扩散完成后浮现 + 丝滑翻牌切换） === */
+        /* === 底部图注区 === */
         .strip-caption-area {
             position: relative;
             width: 100%;
@@ -681,7 +948,7 @@
         }
 
         /* =========================================================
-           模式二：真实宽高比瀑布流画廊 (Index Grid，严格按图片实际宽高比显示)
+           模式二：真实宽高比瀑布流画廊 (Index Grid)
         ========================================================= */
         .contact-grid-stage {
             display: none;
@@ -764,9 +1031,7 @@
         }
 
         /* =========================================================
-           沉浸式组图检视模态框：
-           - 弃用 display:none 切换（避免浏览器合并首帧跳过动画），改用常驻布局 + visibility/opacity 丝滑过渡
-           - 点击中间图片后，中央主图从原位置平滑放大至舞台中央，四周内容（顶栏、中心向外延展的 1px 细线、左右导航、底部由中心向两侧阶梯垂落展开的胶片缩略图）缓缓浮现
+           沉浸式组图检视模态框
         ========================================================= */
         .detail-modal {
             display: block;
@@ -801,7 +1066,6 @@
             margin: 0 auto;
         }
 
-        /* 顶部信息区：由 Web Animations API (fill: 'both') 精确驱动从隐藏到浮现，底部 1px 细线由中心向两侧舒展 */
         .detail-header-block {
             position: relative;
             padding-bottom: 18px;
@@ -873,7 +1137,6 @@
             will-change: transform, opacity;
         }
 
-        /* 底部胶片栏：由 Web Animations API (fill: 'both') 驱动缩略图由中间向两侧呈阶梯垂落展开 */
         .detail-filmstrip-bar {
             display: flex;
             flex-direction: column;
@@ -992,9 +1255,7 @@
         .site-footer a:hover { color: var(--text-main); }
 
         /* =========================================================
-           大屏触摸设备专项优化 (iPad Air / iPad Pro / 触控笔记本 / 平板横屏 > 768px)
-           - 增大触控热区至 Apple HIG 44px 标准，加入优雅微触感反馈 (:active)
-           - 优化分类栏与底部胶片栏的横向顺滑触控滚动
+           大屏触摸设备专项优化
         ========================================================= */
         @media (pointer: coarse) and (min-width: 769px) {
             .series-filter-bar {
@@ -1054,10 +1315,12 @@
         }
 
         /* =========================================================
-           移动端适配：移动端仅使用 Index Grid 展示，且保持每张图片真实宽高比
+           移动端适配
         ========================================================= */
         @media (max-width: 768px) {
-            .site-header { padding: 25px 5vw; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+            .site-header { padding: 22px 5vw; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+            .xv-mark { width: 29px; height: 20px; }
+            .xv-wordmark { font-size: 17px; letter-spacing: 4px; }
             .menu-btn { display: flex; }
             .header-nav {
                 position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
@@ -1065,7 +1328,17 @@
                 opacity: 0; pointer-events: none; transition: 0.4s ease;
             }
             .header-nav.nav-open { opacity: 1; pointer-events: auto; }
-            .header-nav a { font-size: 16px; opacity: 1; }
+            .header-nav a,
+            body.logo-stage-play .header-nav a {
+                font-size: 16px;
+                opacity: 1;
+                transform: none;
+            }
+            .header-nav a .nav-text,
+            body.logo-stage-play .header-nav a .nav-text {
+                transform: none;
+                transition: none;
+            }
             
             .menu-btn.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
             .menu-btn.active span:nth-child(2) { opacity: 0; }
@@ -1096,8 +1369,6 @@
                 bottom: 28px;
             }
 
-            /* 移动端初始在第一屏顶部时，第二屏保持 opacity: 0 隐藏，彻底杜绝 Safari 加载完成时地址栏下方露出第二页内容再消失的闪烁 Bug；
-               一旦用户向下滑动 (> 10px)，第二屏立即原位丝滑浮现，且第一屏与第二屏之间 0 多余空隙！ */
             .archive-showcase-section {
                 min-height: auto;
                 padding: 82px 0 48px;
@@ -1129,7 +1400,6 @@
             }
             .series-pill { flex-shrink: 0; }
 
-            /* 移动端仅使用 Index Grid 效果展示，且严格保留图片原宽高比 */
             .view-mode-switch {
                 display: none !important;
             }
@@ -1165,7 +1435,7 @@
 </head>
 <body>
 
-    <!-- 极简建筑画框与切片流光加载动画 (零文字，契合全站「中心画框 + 两侧垂直切片」的设计语言) -->
+    <!-- 极简建筑画框与切片流光加载动画 -->
     <div id="page-loader" aria-hidden="true">
         <div class="geo-loader-stage" id="geo-loader-stage">
             <span class="geo-wing-slat" data-dist="4"></span>
@@ -1186,18 +1456,49 @@
     <div class="cursor" id="cursor"><span class="cursor-label" id="cursor-label">OPEN</span></div>
 
     <header class="site-header" id="site-header">
-        <a href="#" class="header-logo" onclick="switchView('works')">XIANG</a>
+        <!-- 左侧：黄金比例精修版建筑画框与手风琴切片动态 Logo -->
+        <a href="#" class="header-logo" onclick="switchView('works')" aria-label="XIANG">
+            <svg class="xv-mark" viewBox="0 0 34 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <!-- 左侧 3 根手风琴切片线 -->
+                <g class="xv-slat-wrap xv-slat-wrap-1">
+                    <line class="xv-slat xv-slat-1" x1="2" y1="5.5" x2="2" y2="18.5" />
+                </g>
+                <g class="xv-slat-wrap xv-slat-wrap-2">
+                    <line class="xv-slat xv-slat-2" x1="6.5" y1="3" x2="6.5" y2="21" />
+                </g>
+                <g class="xv-slat-wrap xv-slat-wrap-3">
+                    <line class="xv-slat xv-slat-3" x1="11" y1="4.5" x2="11" y2="19.5" />
+                </g>
+
+                <!-- 右侧黄金比例建筑画框组 (画框与内部 3D 对角线共享同一几何矩阵，四角永远锁死对齐) -->
+                <g class="xv-frame-hover-rig">
+                    <g class="xv-frame-anim-group">
+                        <rect class="xv-frame-rect" x="16" y="2" width="11.5" height="20" />
+                        <line class="xv-diag xv-diag-1" x1="16" y1="22" x2="27.5" y2="2" />
+                        <line class="xv-diag xv-diag-2" x1="16" y1="2" x2="27.5" y2="22" />
+                    </g>
+                </g>
+            </svg>
+            <span class="xv-wordmark" aria-hidden="true">
+                <span class="xv-char" style="--i:0">X</span>
+                <span class="xv-char" style="--i:1">I</span>
+                <span class="xv-char" style="--i:2">A</span>
+                <span class="xv-char" style="--i:3">N</span>
+                <span class="xv-char" style="--i:4">G</span>
+            </span>
+        </a>
         
         <button class="menu-btn" id="menu-btn" aria-label="Menu">
             <span></span><span></span><span></span>
         </button>
 
+        <!-- 右侧：与左侧 Logo 共享时间轴的错峰遮罩上浮导航标签 -->
         <nav class="header-nav" id="nav-links">
-            <a href="#" class="nav-link active" data-target="works">Works</a>
-            <a href="#" class="nav-link" data-target="about">About</a>
-            <a href="https://frame.xiangvisuals.com/" target="_blank">Frame</a>
-            <a href="https://Beads.xiangvisuals.com" target="_blank">Beads</a>
-            <a href="https://file.xiangvisuals.com" target="_blank">File</a>
+            <a href="#" class="nav-link active" data-target="works" style="--nav-i:0"><span class="nav-text">Works</span></a>
+            <a href="#" class="nav-link" data-target="about" style="--nav-i:1"><span class="nav-text">About</span></a>
+            <a href="https://frame.xiangvisuals.com/" target="_blank" style="--nav-i:2"><span class="nav-text">Frame</span></a>
+            <a href="https://Beads.xiangvisuals.com" target="_blank" style="--nav-i:3"><span class="nav-text">Beads</span></a>
+            <a href="https://file.xiangvisuals.com" target="_blank" style="--nav-i:4"><span class="nav-text">File</span></a>
         </nav>
     </header>
 
@@ -1227,11 +1528,8 @@
                 </button>
             </section>
 
-            <!-- =======================================================
-                 底部画廊：1:1 复刻截图的「由中间向两侧倒 V 阶梯垂落扩散」载入动效 + 默认 IMG_0635.jpg 居中
-            ======================================================= -->
+            <!-- 底部画廊 -->
             <section class="archive-showcase-section" id="archive-section">
-                <!-- 顶部系列快速筛选与视图切换 -->
                 <div class="showcase-toolbar">
                     <div class="series-filter-bar" id="series-filter-bar">
                         <button class="series-pill active" data-series="all">
@@ -1270,7 +1568,7 @@
                     </div>
                 </div>
 
-                <!-- 视图 1：参考 Redot.fr 的流光切片画廊 -->
+                <!-- 视图 1：流光切片画廊 -->
                 <div class="kinetic-strip-stage" id="kinetic-strip-stage">
                     <div class="kinetic-strip-Wrapper" id="kinetic-strip"></div>
 
@@ -1309,7 +1607,7 @@
                     </div>
                 </div>
 
-                <!-- 视图 2：严格按照图片实际宽高比显示的瀑布流 Index Grid -->
+                <!-- 视图 2：瀑布流 Index Grid -->
                 <div class="contact-grid-stage" id="contact-grid-stage">
                     <div class="contact-sheet-grid" id="contact-sheet-grid"></div>
                 </div>
@@ -1344,7 +1642,7 @@
         <div class="footer-right">DESIGNED & PHOTOGRAPHED BY XIANG</div>
     </footer>
 
-    <!-- 沉浸式组图模态框：中央主图 FLIP 丝滑展开 + 四周元素（顶栏、底部胶片阶梯、右上关闭按钮）由中心向外缓缓浮现 -->
+    <!-- 沉浸式组图模态框 -->
     <div class="detail-modal" id="detail-modal" aria-hidden="true">
         <button class="minimal-close-btn" id="modal-close"><span class="close-text">CLOSE</span><span class="close-icon"></span></button>
         <div class="detail-content-wrapper">
@@ -1387,7 +1685,6 @@
                                   (navigator.maxTouchPoints > 0) || 
                                   window.matchMedia("(pointer: coarse)").matches;
 
-            // 顶层共享状态声明
             let currentViewMode = isMobileView() ? 'grid' : 'strip';
             let currentSeriesFilter = 'all';
             let gridRenderedOnce = false;
@@ -1406,7 +1703,6 @@
 
             /* ==========================================
                0. 摄影作品完整数据库
-               - 将 https://cllli.oss-cn-beijing.aliyuncs.com/img/new/color/IMG_0635.jpg 精准放置在 index 3 (默认正中间主图！)
             ========================================== */
             const seriesDatabase = [
                 {
@@ -1516,10 +1812,6 @@
                 }
             ];
 
-            // Safari 图像兼容与显存优化辅助函数：
-            // 1. 针对阿里云 OSS 超大原图（部分达 3000万~4500万像素或特殊色彩空间/渐进式编码，易触发 iOS/macOS Safari 单图解码上限或显存耗尽导致白块），
-            //    自动生成标准 sRGB、自适应旋转且分辨率合理的优化链接；
-            // 2. 同时绑定 onerror 自动回退至原始链接，确保 100% 兼容且永不裂图！
             function getSafariSafeUrl(rawUrl, maxEdge = 1400) {
                 if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
                 if (rawUrl.includes('aliyuncs.com') && !rawUrl.includes('x-oss-process')) {
@@ -1545,7 +1837,6 @@
                 imgEl.src = optimizedUrl;
             }
 
-            // 展平为 33 张独立摄影作品
             const allFrames = [];
             seriesDatabase.forEach((series) => {
                 series.images.forEach((imgUrl, idxInSeries) => {
@@ -1571,12 +1862,10 @@
                 });
             });
 
-            const N = allFrames.length; // 33
-            // 查找 IMG_0635.jpg 所在的精确全局索引（index 3），作为默认正中间图片
+            const N = allFrames.length;
             const defaultCenterIndex = allFrames.findIndex(f => f.src.includes('IMG_0635.jpg'));
             const INITIAL_CENTER = defaultCenterIndex >= 0 ? defaultCenterIndex : 3;
 
-            // 首屏随机主图（使用标准路径 + Safari 安全回退加载）
             const heroImagesDatabase = [
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/2-2.jpg",
                 "https://cllli.oss-cn-beijing.aliyuncs.com/img/new/black/IMG_0587.jpg",
@@ -1601,17 +1890,14 @@
                 });
             }
 
-            // 触摸设备自适应提示文案
             const stripHintEl = document.querySelector('.strip-hint-text');
             if (stripHintEl && isTouchDevice) {
                 stripHintEl.textContent = 'SWIPE TO EXPLORE · TAP TO CENTER · TAP CENTER TO VIEW';
             }
 
             /* ==========================================
-               1. 极简建筑画框与切片流光加载动画逻辑 (零文字，全连续帧驱动)
-               - 阶段一 (0.00 -> 0.46)：由中心向两侧阶梯式自上而下垂落展开 9 根垂直几何线（呼应画廊倒 V 扩散）
-               - 阶段二 (0.36 -> 0.84)：正中央垂直线向两侧平滑推开手风琴，舒展为 36px×48px 的 1px 极简取景画框（呼应首屏画框构图）
-               - 阶段三 (0.78 -> 1.00)：两侧切片柔和收拢，中央画框轻盈放大并消融，无缝带出首屏主图
+               1. 极简建筑画框与切片流光加载动画逻辑
+               - 当 Loader 正式开始淡出揭示首屏时，添加 body.logo-stage-play 触发左上角 Logo 与右侧导航栏的接力展开！
             ========================================== */
             const loaderEl = document.getElementById('page-loader');
             const loaderStageEl = document.getElementById('geo-loader-stage');
@@ -1630,11 +1916,9 @@
             const animateLoader = (now) => {
                 const rawT = Math.min(1, Math.max(0, (now - loaderStartTime) / loaderDuration));
 
-                // 阶段一：中心向两侧自上而下阶梯垂落；阶段二：中心细线展开为矩形取景框；阶段三：无缝消融过渡
                 const expandT = smoothCosine((rawT - 0.34) / 0.48);
                 const exitT = smoothCosine((rawT - 0.78) / 0.22);
 
-                // 1. 中央取景画框：先自上而下垂落，再由 1.5px 细线平滑展开为 36px 宽的极简矩形取景框
                 const centerDropT = smoothCosine(rawT / 0.32);
                 const frameW = 1.5 + expandT * 34.5;
                 if (centerFrameEl) {
@@ -1646,21 +1930,18 @@
                     centerInnerEl.style.opacity = (expandT * (1 - exitT * 0.5)).toFixed(3);
                 }
 
-                // 2. 左右各 4 根垂直切片线：按距离中心 dist=1..4 依次垂落，并在阶段二呈现阶梯高度，阶段三轻盈收拢
                 const targetHeights = [1, 0.80, 0.58, 0.38, 0.22];
                 wingSlats.forEach((slat) => {
                     const dist = Number(slat.dataset.dist) || 1;
                     const delay = dist * 0.065;
                     const dropT = smoothCosine((rawT - delay) / 0.32);
                     const stepRatio = targetHeights[dist] || 0.3;
-                    // 从等高垂落平滑过渡到两侧阶梯高度，并在尾段随 exitT 柔和收起
                     const currentScaleY = dropT * (1 - expandT * (1 - stepRatio)) * (1 - exitT * 0.65);
                     const currentOpacity = Math.min(1, dropT * 1.2) * (1 - expandT * (dist * 0.11)) * (1 - exitT);
                     slat.style.transform = `scaleY(${Math.max(0, currentScaleY).toFixed(4)})`;
                     slat.style.opacity = Math.max(0, currentOpacity).toFixed(3);
                 });
 
-                // 3. 整体舞台在尾段轻微舒展放大，与首屏主图浮现完美衔接
                 if (loaderStageEl) {
                     const stageScale = 1 + exitT * 0.16;
                     loaderStageEl.style.transform = `scale(${stageScale.toFixed(4)})`;
@@ -1677,6 +1958,10 @@
                     requestAnimationFrame(animateLoader);
                 } else {
                     loaderEl.classList.add('loaded');
+                    // 当白色遮罩开始消散露出顶栏时（延迟 320ms），正式启动顶栏 Logo 与右侧导航栏的接力展开！
+                    setTimeout(() => {
+                        document.body.classList.add('logo-stage-play');
+                    }, 320);
                     setTimeout(() => { loaderEl.style.display = 'none'; }, 880);
                 }
             };
@@ -1751,11 +2036,7 @@
             }
 
             /* =========================================================
-               3. 1:1 复刻截图的两阶段「由中间向两侧倒 V 阶梯垂落扩散」载入动效
-                  + 二阶临界阻尼 (Critically-Damped ODE) 零顿挫滑行引擎
-               - 为什么之前结束时会顿一下？因为之前在动画结束瞬间切换了宽度计算分支与 hover 状态类！
-               - 现在采用解析式二阶临界阻尼方程 (阻尼比 ζ = 1.0，零回弹)：速度与加速度在抵达中心时同时渐近归零，
-                 且运动中与静止后使用 100% 同一套连续宽度方程与同一个 .is-focused 类，结束瞬间 0 状态跳变、0 顿挫！
+               3. 二阶临界阻尼流光切片引擎
             ========================================================= */
             const archiveSection = document.getElementById('archive-section');
             const stripContainer = document.getElementById('kinetic-strip');
@@ -1766,27 +2047,24 @@
             const capCnEl = document.getElementById('cap-cn');
             const capTitleEl = document.getElementById('cap-title');
 
-            const HALF_WINDOW = 14; // 左右各 14 张 + 正中间 1 张 = 同屏 29 张可见切片
+            const HALF_WINDOW = 14;
             const sliceElements = [];
             const sliceInners = [];
             const sliceMediaNodes = [];
 
-            // 温和有机的条形码律动权重
             const barcodeRhythm = allFrames.map((_, i) => {
                 const wave = Math.sin(i * 2.1) * 0.06 + Math.cos(i * 3.3) * 0.04;
                 return 0.62 + wave;
             });
 
-            // 默认锁定在 IMG_0635.jpg (INITIAL_CENTER = 3)
             let currentTrackPos = INITIAL_CENTER;
             let animTargetPos = INITIAL_CENTER;
-            let trackVelocity = 0; // 连续速度状态，支持中途丝滑转向与渐近零顿挫停止
+            let trackVelocity = 0;
             let isAnimatingTrack = false;
             let glidingTargetIdx = -1;
             let activeLogicalIdx = -1;
             let lastRenderTimestamp = 0;
 
-            // 两阶段倒 V 扩散载入动画状态
             let hasTriggeredEntrance = false;
             let isEntranceRunning = false;
             let entranceStartTime = 0;
@@ -1800,18 +2078,15 @@
                 }
             }
 
-            // 启动一段二阶临界阻尼 (ζ = 1.0) 丝滑聚焦滑行：无初速突跳、无过冲回弹、无终点顿挫
             function glideToTrackPos(newTarget) {
                 animTargetPos = newTarget;
                 isAnimatingTrack = true;
                 glidingTargetIdx = ((Math.round(newTarget) % N) + N) % N;
                 lastRenderTimestamp = performance.now();
 
-                // 提前预加载目标切片及其邻近切片
                 for (let offset = -5; offset <= 5; offset++) {
                     ensureSliceLoaded(glidingTargetIdx + offset);
                 }
-                // 图注直接优雅翻牌至选中的目标图片
                 if (glidingTargetIdx !== activeLogicalIdx) {
                     activeLogicalIdx = glidingTargetIdx;
                     updateCaptionMetadata(activeLogicalIdx);
@@ -1827,7 +2102,6 @@
                 return diff;
             }
 
-            // 创建 33 个独立切片节点
             allFrames.forEach((frame, i) => {
                 const slice = document.createElement('div');
                 slice.className = 'strip-slice';
@@ -1855,7 +2129,6 @@
                     if (Math.abs(d) > 0.38) {
                         glideToTrackPos(Math.round(currentTrackPos + d));
                     } else {
-                        // 点击正中间主图：使用共享几何 FLIP 动画丝滑放大打开
                         openDetailModal(frame.seriesId, frame.idxInSeries, slice);
                     }
                 });
@@ -1884,7 +2157,6 @@
                 }
             }
 
-            // 预加载中心视野附近的切片（由中心向两侧对称加载）
             if (!isMobileView()) {
                 ensureSliceLoaded(INITIAL_CENTER);
                 for (let step = 1; step <= 10; step++) {
@@ -1909,7 +2181,6 @@
                 loadNext();
             }
 
-            // 启动两阶段「中心向两侧倒 V 阶梯垂落 -> 中心全彩展开」载入动效
             function startVCascadeEntrance() {
                 archiveSection.classList.add('entered');
                 entranceProgress = 0.0;
@@ -1919,7 +2190,6 @@
                 wakeUpStripEngine();
             }
 
-            // 监听用户滑动到画廊区域：当画廊主体进入视口 (threshold: 0.35) 时，增加 280ms 优雅延迟后再开始播放倒 V 扩散动画
             const stripObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting && !hasTriggeredEntrance) {
@@ -1938,7 +2208,6 @@
             }, { threshold: 0.35 });
             stripObserver.observe(stripContainer);
 
-            // 顶栏与画廊工具栏防重叠监听 + 移动端首屏防露底控制
             const showcaseToolbarEl = document.querySelector('.showcase-toolbar');
             const headerEl = document.getElementById('site-header');
             const handleScrollLayoutSync = () => {
@@ -1964,7 +2233,6 @@
             };
             window.addEventListener('scroll', handleScrollLayoutSync, { passive: true });
 
-            // 垂直滚轮 100% 留给页面自然上下滚动；仅在横向滑动或按住 Shift 时横向拨动切片
             let wheelSnapTimer = null;
             stripContainer.addEventListener('wheel', (e) => {
                 if (entranceProgress < 0.9) return;
@@ -1987,7 +2255,6 @@
                 }
             }, { passive: false });
 
-            // 鼠标左右拖拽交互
             stripContainer.addEventListener('mousedown', (e) => {
                 if (entranceProgress < 0.9) return;
                 isDraggingStrip = true;
@@ -2022,11 +2289,8 @@
                 setTimeout(() => { hasDraggedStrip = false; }, 45);
             });
 
-            // 大屏触摸设备与通用触屏支持：
-            // 1. 轻触侧边切片即时预览彩色，松手平滑滑入中心（不残留粘滞 hover）
-            // 2. 1:1 实时跟手水平滑动，松手瞬间将手指真实释放速度 (v0) 无缝注入二阶临界阻尼方程，实现零接缝惯性滑行！
             let isTouchingStrip = false;
-            let touchDirectionLocked = null; // 'horizontal' | 'vertical' | null
+            let touchDirectionLocked = null;
             let touchStartX = 0;
             let touchStartY = 0;
             let lastTouchX = 0;
@@ -2069,7 +2333,6 @@
                 const totalDx = touchStartX - touch.clientX;
                 const totalDy = touchStartY - touch.clientY;
 
-                // 智能手势方向锁定：水平位移大于垂直位移时锁定为画廊左右滑动，垂直滑动则交给浏览器自然滚屏
                 if (!touchDirectionLocked) {
                     if (Math.abs(totalDx) > 6 && Math.abs(totalDx) > Math.abs(totalDy) * 1.08) {
                         touchDirectionLocked = 'horizontal';
@@ -2096,7 +2359,6 @@
                     lastTouchX = touch.clientX;
                     lastTouchTime = now;
 
-                    // 针对大屏触摸设备 (iPad Pro / 触屏电脑) 优化跟手灵敏度
                     const sensitivity = Math.max(54, Math.min(105, window.innerWidth / 10.5));
                     const instantVelPerSec = (frameDx / sensitivity) / dtSec;
                     touchVelocityPerSec = touchVelocityPerSec * 0.32 + instantVelPerSec * 0.68;
@@ -2118,7 +2380,6 @@
                     const totalPixelDx = touchStartX - lastTouchX;
                     let projectedTarget;
 
-                    // 若为轻快短滑（位移超 18px 但未满半格），顺势切换到下一张/上一张；若为连续滑动，则结合释放速度计算落位
                     if (Math.abs(totalDeltaTrack) < 0.45 && (Math.abs(totalPixelDx) > 18 || Math.abs(releaseVel) > 1.2)) {
                         const stepDir = totalPixelDx !== 0 ? Math.sign(totalPixelDx) : Math.sign(releaseVel);
                         projectedTarget = Math.round(touchStartTrackPos) + stepDir;
@@ -2127,7 +2388,6 @@
                         projectedTarget = Math.round(currentTrackPos + momentumOffset);
                     }
 
-                    // 将手指释放瞬间的真实速度传入二阶临界阻尼引擎，实现 C1 速度连续的丝滑落位
                     trackVelocity = releaseVel * 0.65;
                     glideToTrackPos(projectedTarget);
                     setTimeout(() => { hasDraggedStrip = false; }, 60);
@@ -2157,7 +2417,6 @@
                 }
             });
 
-            // 垂直翻牌式 (Slot-Roll) 图注切换动画
             let captionAnimTimer = null;
             function updateCaptionMetadata(logicalIdx) {
                 const frame = allFrames[logicalIdx];
@@ -2198,13 +2457,11 @@
                     }
                 });
 
-                // 静默预热当前居中系列与主图至模态框 DOM，确保用户「第一次点击」时所有缩略图与大图早已在内存中就绪！
                 if (!isDetailModalOpen && typeof prewarmModalDOM === 'function') {
                     prewarmModalDOM(frame.seriesId, frame.idxInSeries);
                 }
             }
 
-            // 核心渲染循环：解析式二阶临界阻尼 (Critically-Damped ODE) + 100% 无状态分支的连续宽度函数
             function renderInfiniteStrip(now) {
                 rafId = null;
                 if (isMobileView() || currentViewMode !== 'strip') return;
@@ -2214,8 +2471,6 @@
                 lastRenderTimestamp = timestamp;
                 let needsNextFrame = false;
 
-                // 1. 解析式二阶临界阻尼 (ζ = 1.0, ω = 6.2)：
-                //    起步加速度柔和建立，尾段速度与加速度同步以 e^(-ωt) 渐近归零，绝不产生任何回弹或终点顿挫！
                 if (isAnimatingTrack) {
                     const omega = 6.2;
                     const d0 = currentTrackPos - animTargetPos;
@@ -2237,7 +2492,6 @@
                     }
                 }
 
-                // 2. 两阶段载入动画进度更新
                 if (isEntranceRunning) {
                     const elapsedEnt = Math.max(0, timestamp - entranceStartTime);
                     entranceProgress = Math.min(1.0, elapsedEnt / entranceDuration);
@@ -2248,7 +2502,6 @@
                     }
                 }
 
-                // 3. 非自动滑行时（如手动拖拽）同步更新正中间主图的图注
                 const roundedLogical = ((Math.round(currentTrackPos) % N) + N) % N;
                 if (!isAnimatingTrack && roundedLogical !== activeLogicalIdx) {
                     activeLogicalIdx = roundedLogical;
@@ -2262,15 +2515,12 @@
                 const stripH = stripContainer.clientHeight || 450;
                 const maxActiveW = containerW * 0.45;
 
-                // 阶段一 (0.00 -> 0.58)：顶部平齐，等宽黑白切片由中心向两侧呈倒 V / U 型阶梯自上而下垂落
-                // 阶段二 (0.54 -> 1.00)：由等宽条形码平滑过渡为 Redot 手风琴宽度分布
                 const cascadePhaseT = Math.min(1.0, entranceProgress / 0.58);
                 const expandPhaseRaw = Math.max(0.0, Math.min(1.0, (entranceProgress - 0.54) / 0.46));
                 const morphToAccordion = expandPhaseRaw < 0.5
                     ? 4 * expandPhaseRaw * expandPhaseRaw * expandPhaseRaw
                     : 1 - Math.pow(-2 * expandPhaseRaw + 2, 3) / 2;
 
-                // 所有 33 个切片全部参与连续排序与权重计算，超出 HALF_WINDOW + 0.5 的切片权重与边距平滑归零，绝不触发 display:none 切换跳动！
                 const orderedItems = [];
                 let weightedActiveNatW = 0;
                 let totalSideWeightSum = 0;
@@ -2280,14 +2530,11 @@
                     const d = getSignedWrapDist(i, currentTrackPos);
                     const ad = Math.abs(d);
                     const frame = allFrames[i];
-                    // 100% 唯一、无状态分支的自然宽度计算：确保动画进行中与结束帧完全一致，绝无终点切换顿挫
                     const natW = Math.min(maxActiveW, stripH * frame.aspectRatio);
 
-                    // 中心主图余弦峰值权重：在 d ∈ (-1, 1) 内恒满足 peak(-f) + peak(1-f) === 1.0
                     const peak = ad < 1.0 ? 0.5 * (1 + Math.cos(Math.PI * ad)) : 0;
                     weightedActiveNatW += peak * natW;
 
-                    // 边缘平滑归零窗：在 ad >= HALF_WINDOW + 0.5 时完全归零
                     let edgeTaper = 0;
                     if (ad < HALF_WINDOW + 0.5) {
                         const windowRatio = ad / (HALF_WINDOW + 0.5);
@@ -2357,7 +2604,6 @@
                     const targetAccordionW = Math.max(0, item.peak * item.natW + sidePx);
                     const currentW = uniformSliceW * (1 - morphToAccordion) + targetAccordionW * morphToAccordion;
 
-                    // 计算当前切片在阶段一中的自上而下垂落高度百分比 (使用 GPU translate3d 代替高开销的 clip-path)
                     let nextTransform = 'translate3d(0, 0%, 0)';
                     if (cascadePhaseT < 1.0) {
                         const normDist = Math.min(1, item.ad / HALF_WINDOW);
@@ -2409,7 +2655,7 @@
             }
 
             /* =========================================================
-               4. 真实宽高比瀑布流画廊 (Index Grid，严格按图片实际宽高比显示)
+               4. 真实宽高比瀑布流画廊 (Index Grid)
             ========================================================= */
             const gridStage = document.getElementById('contact-grid-stage');
             const stripStage = document.getElementById('kinetic-strip-stage');
@@ -2462,7 +2708,6 @@
                     `;
                     const imgBox = card.querySelector('.grid-card-img-box');
                     const gridImg = card.querySelector('img');
-                    // 错峰加载瀑布流图片并自动启用 Safari 安全分辨率与原始链接回退，彻底杜绝 Safari 懒加载死锁与显存溢出
                     setTimeout(() => {
                         bindSafariSafeImg(gridImg, frame.src, 1500, (loadedImg) => {
                             imgBox.classList.add('img-loaded');
@@ -2537,6 +2782,7 @@
 
             /* ==========================================
                5. SPA 幕布过渡切换 (Works / About)
+               - 每次切换页面揭幕时，重新触发一次 Logo 与右侧导航栏的接力展开！
             ========================================== */
             const navLinks = document.querySelectorAll('.nav-link[data-target]');
             const views = document.querySelectorAll('.view-section');
@@ -2555,6 +2801,7 @@
                 });
 
                 transitionCurtain.classList.add('active');
+                document.body.classList.remove('logo-stage-play');
 
                 setTimeout(() => {
                     views.forEach(view => {
@@ -2567,6 +2814,9 @@
                     }
 
                     transitionCurtain.classList.add('done');
+                    setTimeout(() => {
+                        document.body.classList.add('logo-stage-play');
+                    }, 220);
                     setTimeout(() => {
                         transitionCurtain.classList.add('no-transition');
                         transitionCurtain.classList.remove('active', 'done');
@@ -2591,10 +2841,7 @@
             });
 
             /* ==========================================
-               6. 沉浸式组图模态框：
-               - 采用原生 Web Animations API (element.animate) 显式驱动首末关键帧，确保「第一次点击」与后续点击 100% 一致丝滑，绝不丢帧！
-               - 预先利用已解码的 500p 轻量画布数据 (previewUrl) 瞬时呈现首帧画面，并在后台无感升级为原图分辨率，彻底消除初次点击时的解码卡顿与白闪
-               - 中央主图从原位置 FLIP 放大至舞台中央，同时四周内容（顶部信息栏、1px 中心扩散细线、左右两侧导览按钮、右上角关闭按钮、底部由中间向两侧阶梯垂落展开的胶片缩略图）缓缓浮现
+               6. 沉浸式组图模态框
             ========================================== */
             const detailModal = document.getElementById('detail-modal');
             const detailHeaderBlock = document.querySelector('.detail-header-block');
@@ -2615,18 +2862,15 @@
                 }
             }
 
-            // 辅助函数：切换舞台主图时，先用空白像素清除旧图残留或直接复用已加载的相同 URL（1500px），彻底杜绝闪烁上一张预览图！
-            function setStageImageSeamless(seriesId, photoIdx, fullUrl,alreadyLoadedSrc = null) {
+            function setStageImageSeamless(seriesId, photoIdx, fullUrl, alreadyLoadedSrc = null) {
                 const targetSafeUrl = getSafariSafeUrl(fullUrl, 1500);
                 const desiredSrc = alreadyLoadedSrc || targetSafeUrl;
                 if (detailStageImg.src !== desiredSrc) {
-                    // 先立即清除旧图位图缓存，防止新图解码前闪现上一张图片
                     detailStageImg.src = BLANK_PIXEL;
                     bindSafariSafeImg(detailStageImg, fullUrl, 1500);
                 }
             }
 
-            // 预构建当前系列的缩略图栏与后台图片缓存（不污染 detailStageImg 当前位图）
             function prewarmModalDOM(seriesId, photoIdx, updateStageNow = false, clickedImgSrc = null) {
                 const series = seriesDatabase.find(s => s.id === seriesId) || seriesDatabase[0];
                 const targetUrl = series.images[photoIdx] || series.images[0];
@@ -2634,7 +2878,6 @@
                 if (updateStageNow) {
                     setStageImageSeamless(series.id, photoIdx, targetUrl, clickedImgSrc);
                 } else {
-                    // 后台静默预热到浏览器缓存，不改动 detailStageImg.src
                     const bgPreloader = new Image();
                     bgPreloader.src = getSafariSafeUrl(targetUrl, 1500);
                 }
@@ -2673,12 +2916,9 @@
                 detailFilmstripCounter.textContent = `FRAME ${curStr} OF ${totStr} · CLICK PHOTO TO ZOOM`;
             }
 
-            // 页面首屏动画完成后再静默预热默认居中作品 (IMG_0635.jpg) 的模态框 DOM，确保首屏加载零竞争、极致轻快
             setTimeout(() => {
                 prewarmModalDOM(allFrames[INITIAL_CENTER].seriesId, allFrames[INITIAL_CENTER].idxInSeries);
             }, 1200);
-
-
 
             function updateModalStagePhoto(newIdx) {
                 if (!activeModalSeries) return;
@@ -2717,12 +2957,9 @@
                 });
             }
 
-
-
-            // 大屏与移动端触摸增强：在检视模态框舞台区支持「左右跟手滑动切图」与「向下拖拽优雅关闭返回画廊」
             let modalTouchStartX = 0;
             let modalTouchStartY = 0;
-            let modalTouchAxis = null; // 'x' | 'y' | null
+            let modalTouchAxis = null;
             let isModalTouching = false;
 
             detailModal.addEventListener('touchstart', (e) => {
@@ -2752,11 +2989,9 @@
                 }
 
                 if (modalTouchAxis === 'x') {
-                    // 水平跟手阻尼位移预览
                     const dampedX = dx * 0.38;
                     detailStageImg.style.transform = `translate3d(${dampedX.toFixed(1)}px, 0px, 0) scale(0.99)`;
                 } else if (modalTouchAxis === 'y' && dy > 0) {
-                    // 垂直下拉跟手缩放预览（契合 FLIP 原位缩回设计语言）
                     const pullScale = Math.max(0.76, 1 - dy / 900);
                     detailStageImg.style.transform = `translate3d(${(dx * 0.25).toFixed(1)}px, ${(dy * 0.55).toFixed(1)}px, 0) scale(${pullScale.toFixed(3)})`;
                 }
@@ -2801,15 +3036,11 @@
                 activeModalPhotoIdx = initialPhotoIdx;
                 lastClickedSourceEl = sourceEl || null;
 
-                // 1. 记录被点击图片在屏幕上的精确几何矩形 (FLIP 起点)，并提取被点击图片已解码的真实 src
                 const sourceRect = sourceEl ? sourceEl.getBoundingClientRect() : null;
                 const sourceImgEl = sourceEl ? (sourceEl.tagName === 'IMG' ? sourceEl : sourceEl.querySelector('img')) : null;
                 const clickedLoadedSrc = (sourceImgEl && sourceImgEl.src) ? sourceImgEl.src : null;
 
-                // 2. 将舞台主图立即切换为被点击卡片已加载完成的图片源（0ms 命中内存缓存，绝不闪现上一张图！）
                 prewarmModalDOM(series.id, initialPhotoIdx, true, clickedLoadedSrc);
-
-
 
                 const thumbNodes = Array.from(detailFilmstripTrack.children);
                 thumbNodes.forEach((thumb, idx) => {
@@ -2826,7 +3057,6 @@
                 document.body.classList.add('modal-viewing');
                 detailModal.classList.add('show');
 
-                // 3. 计算 FLIP 起点位移与缩放比例（让中央大图第 0 帧严格对齐被点击的中心图片）
                 const matchingFrame = allFrames.find(f => f.seriesId === series.id && f.idxInSeries === initialPhotoIdx);
                 const ar = matchingFrame ? matchingFrame.aspectRatio : 1.42;
                 const vw = window.innerWidth;
@@ -2849,23 +3079,19 @@
                     flipScale = Math.max(0.36, Math.min(0.92, sourceRect.height / Math.max(120, estTargetH)));
                 }
 
-                // 4. 使用 Web Animations API + fill: 'both'（保证在 delay 期间严格锁定第 0 帧隐藏状态，绝不闪现！），初次点击 100% 丝滑！
                 if (typeof detailModal.animate === 'function') {
                     [detailModal, detailStageImg, detailHeaderBlock, detailHeaderLine, desktopCloseBtn, detailFilmstripCounter, ...thumbNodes].forEach(cancelAnims);
 
-                    // (a) 背景柔光遮罩渐显
                     detailModal.animate([
                         { opacity: 0 },
                         { opacity: 1 }
                     ], { duration: 640, easing: SILKY_EASE, fill: 'both' });
 
-                    // (b) 中央大图从点击原位丝滑放大至舞台中央
                     detailStageImg.animate([
                         { transform: `translate3d(${flipDx.toFixed(1)}px, ${flipDy.toFixed(1)}px, 0) scale(${flipScale.toFixed(3)})`, opacity: 0.92 },
                         { transform: 'translate3d(0px, 0px, 0) scale(1)', opacity: 1 }
                     ], { duration: 840, easing: SILKY_EASE, fill: 'both' });
 
-                    // (c) 上方：顶部信息栏缓缓浮现 + 1px 装饰细线由中心向两侧展开
                     if (detailHeaderBlock) {
                         detailHeaderBlock.animate([
                             { opacity: 0, transform: 'translate3d(0, 16px, 0)' },
@@ -2879,7 +3105,6 @@
                         ], { duration: 920, delay: 260, easing: SILKY_EASE, fill: 'both' });
                     }
 
-                    // (e) 右上角：关闭按钮柔和浮现
                     if (desktopCloseBtn && !isMobileView()) {
                         desktopCloseBtn.animate([
                             { opacity: 0, transform: 'translate3d(0, -12px, 0)' },
@@ -2887,7 +3112,6 @@
                         ], { duration: 760, delay: 320, easing: SILKY_EASE, fill: 'both' });
                     }
 
-                    // (f) 下方：计数器与胶片缩略图由中间向两侧呈倒 V 阶梯自上而下垂落浮现
                     if (detailFilmstripCounter) {
                         detailFilmstripCounter.animate([
                             { opacity: 0, transform: 'translate3d(0, 12px, 0)' },
@@ -2937,7 +3161,6 @@
                 }
 
                 if (typeof detailModal.animate === 'function') {
-                    // 四周内容先行轻盈隐去
                     [detailHeaderBlock, detailFilmstripCounter, desktopCloseBtn].forEach(el => {
                         if (el) {
                             el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
@@ -2948,7 +3171,6 @@
                         thumb.animate([{ opacity: 0.5 }, { opacity: 0 }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
                     });
 
-                    // 中央大图平滑缩回原点击位置
                     detailStageImg.animate([
                         { transform: 'translate3d(0px, 0px, 0) scale(1)', opacity: 1 },
                         { transform: `translate3d(${targetDx.toFixed(1)}px, ${targetDy.toFixed(1)}px, 0) scale(${targetScale})`, opacity: 0 }
@@ -2978,7 +3200,7 @@
             });
 
             /* ==========================================
-               7. 单图极致放大模态框及全键盘支持 (Zoom Modal)
+               7. 单图极致放大模态框及全键盘支持
             ========================================== */
             const zoomModal = document.getElementById('zoom-modal');
             const zoomImg = document.getElementById('zoom-img');
@@ -3018,7 +3240,6 @@
             desktopZoomClose.addEventListener('click', closeZoomModal);
             zoomModal.addEventListener('click', (e) => { if (e.target === zoomModal) closeZoomModal(); });
 
-            // 全局方向键与 ESC 支持 (优雅单向滑行)
             document.addEventListener('keydown', (e) => {
                 if (isZoomModalOpen) {
                     if (e.key === 'Escape') closeZoomModal();
